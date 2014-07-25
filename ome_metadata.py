@@ -3,7 +3,7 @@ import math as m
 import numpy as np
 from ome import ome, OMEBase
 import os
-from SlideImage import SlideImage
+from slide_metadata import SlideImage
 import wx
 from matplotlib import pyplot
 import PIL
@@ -39,6 +39,8 @@ class OMETIFF(OMEBase):
         self.meta = SlideImage(self.InputPath)
         self.mode = self.meta.micro_mode()
         self.scalefact = scalefact
+        self.tile_width = 1024
+        self.tile_height = 1024
         if not userDetails:
             current_user = 'QBIuser'
             current_group = 'QBIgroup'
@@ -77,17 +79,17 @@ class OMETIFF(OMEBase):
             DatasetID = str(self.InputFilename).replace(' ','_')
         else:
             DatasetID = str(self.InputFilename)
-        xsz = self.roi[3] - self.roi[2]
-        ysz = self.roi[1] - self.roi[0]
-        zsz = int(ImageData['Z'])
+        self.sizeX = self.roi[3] - self.roi[2]
+        self.sizeY = self.roi[1] - self.roi[0]
+        self.sizeZ = int(ImageData['Z'])
         writeChans = self.outChan
-        csz = len(writeChans)
-        tsz = meta.time_points()
+        self.sizeC = len(writeChans)
+        self.sizeT = meta.time_points()
 
-        if tsz == 1:
+        if self.sizeT == 1:
             TimeIncrement = '0.0'
         else:
-            TimeIncrement = str(tsz)
+            TimeIncrement = str(self.sizeT)
             
         dtype = np.dtype('uint8')
 
@@ -121,7 +123,7 @@ class OMETIFF(OMEBase):
         if self.instrument == 'Fluorescence': 
             pixels = ome.Pixels(
                         DimensionOrder=order, ID='Pixels:%s' % (self.instrument),
-                        SizeX = str(xsz), SizeY = str(ysz), SizeZ = str(zsz), SizeT=str(tsz), SizeC = str(csz),
+                        SizeX = str(self.sizeX), SizeY = str(self.sizeY), SizeZ = str(self.sizeZ), SizeT=str(self.sizeT), SizeC = str(self.sizeC),
                         Type = self.dtype2PixelIType (dtype), **pixels_d
                         )
             if (len(writeChans) > 1):
@@ -164,7 +166,7 @@ class OMETIFF(OMEBase):
         if self.instrument == 'Bright-field': 
             pixels = ome.Pixels(
                         DimensionOrder=order, ID='Pixels:%s' % (self.instrument),
-                        SizeX = str(xsz), SizeY = str(ysz), SizeZ = str(zsz), SizeT=str(tsz), SizeC = str(1),
+                        SizeX = str(self.sizeX), SizeY = str(self.sizeY), SizeZ = str(self.sizeZ), SizeT=str(self.sizeT), SizeC = str(1),
                         Type = self.dtype2PixelIType (dtype), **pixels_d
                         )
             chan_dict = channelData[0]
