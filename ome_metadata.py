@@ -3,7 +3,7 @@ import math as m
 import numpy as np
 from ome import ome, OMEBase
 import os
-from SlideImage import SlideImage
+from slide_metadata import SlideImage
 import wx
 from matplotlib import pyplot
 import PIL

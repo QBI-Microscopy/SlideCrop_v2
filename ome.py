@@ -98,8 +98,8 @@ class TiffDataGenerator:
         self.scale = scalefact
         self.data = input_data
 #
-#    def create_tiles(self):
-#        
+#    def create_tile(self):
+        
 #    def create_plane(self):
 #        
     def tif_data_from_imaris(self,pixelregion,outChan):
