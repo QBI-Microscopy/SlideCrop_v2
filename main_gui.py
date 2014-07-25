@@ -39,7 +39,6 @@ except ImportError: # if it's not there locally, try the wxPython lib.
 id_SELECT   = wx.NewId()
 id_RECT     = wx.NewId()
 ID_RECT_ROI_SELECT = 6668
-# Size of the drawing page, in pixels.
 
 PAGE_WIDTH  = 1000
 PAGE_HEIGHT = 1000
