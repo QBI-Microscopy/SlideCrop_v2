@@ -10,6 +10,26 @@ class SlideImage:
         self.resLevels = len(self.infile['/DataSet'])
         self.numChannels = len(self.infile['/DataSet/ResolutionLevel 0/TimePoint 0/'])
         
+    def get_data_in_channel(self, selectedRes, channelNum, region=None):
+        imSize = self.image_size_from_data()[selectedRes]
+        if region:
+            regionW = region[3]-region[2]
+            regionH = region[1]-region[0]
+        else:
+            regionW = imSize[0]
+            regionH = imSize[1]
+        im_dtype = np.dtype('uint8')
+        respath = '/DataSet/ResolutionLevel ' + str(selectedRes) + '/'
+        imrespath = respath + 'TimePoint 0' + '/' + 'Channel ' + str(channelNum)
+        self.imarray = np.zeros((1,regionH,regionW),dtype=im_dtype)
+        pathToData = self.infile[imrespath]
+        data = pathToData["Data"]
+        if region:
+            self.imarray[0,:,:] = data[0,region[0]:region[1],region[2]:region[3]]
+        else:
+            self.imarray[0:,:] = data[0,:,:]            
+        return self.imarray  
+    
     def get_data(self, selectedRes,channelNum,region=None):
         imSize = self.image_size_from_data()[selectedRes]
         if region:
@@ -47,6 +67,7 @@ class SlideImage:
                 self.imarray[:,:,0] = data[0,:,:]            
             #get just a single channel
         return self.imarray        
+      
 
 
     def display_image(self):

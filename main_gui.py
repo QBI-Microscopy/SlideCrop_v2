@@ -239,7 +239,7 @@ class SlideCrop(wx.Frame):
 
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
         self.statusbar.SetStatusWidths([-4, -3])
-        self.statusbar.SetStatusText("Daniel Matthews @ 12 Nov 2013", 0)
+        self.statusbar.SetStatusText("Daniel Matthews @ 29 July 2014", 0)
         self.statusbar.SetStatusText("Slide Crop", 1)
 
         self._leftWindow1 = wx.SashLayoutWindow(self, 101, wx.DefaultPosition,
@@ -1569,12 +1569,10 @@ class SlideCrop(wx.Frame):
     def createOutput(self,selection,roiArray,dlg=None):
         scalefact = int(self.scaleCombo.GetSelection())
         outChanChoice = (self.radio1.GetValue())
-        
         if outChanChoice:
             outChan = range(self.numchannels)
         else:
             outChanString = self.chans.GetValue()
-            
             if outChanString.find(',') == 1:
                 Channels = map(int, outChanString.split(','))
                 outChan = [x-1 for x in Channels]
@@ -1610,7 +1608,7 @@ class SlideCrop(wx.Frame):
             if outputFileChoice:
                 if (idx + 1) < 10:
                     if len(outChan) == 1:
-                        chanstr = str(outChan[0])
+                        chanstr = '0' + str(outChan[0]+1)
                         outfilename = infname + '_' + '00' + str(idx + 1) + '_chan' + chanstr + '.ome.tif'
                     else:
                         outfilename = infname + '_' + '00' + str(idx + 1) + '.ome.tif'

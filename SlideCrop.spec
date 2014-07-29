@@ -15,8 +15,8 @@ def Datafiles(*filenames, **kw):
 		for filename in filenames
 		if os.path.isfile(filename))
 		
-a = Analysis(['E:\\Shared with Win7\\SlideCrop2.0\\MainGUI.py'],
-             pathex=['E:\\Shared with Win7\\SlideCrop2.0\\'])
+a = Analysis(['E:\\Shared with Win7\\SlideCrop\\main_gui.py'],
+             pathex=['E:\\Shared with Win7\\SlideCrop\\'])
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,
@@ -25,19 +25,19 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=False , icon='E:\\Shared with Win7\\SlideCrop2.0\\icon.ico')
+          console=False , icon='E:\\Shared with Win7\\SlideCrop\\icon.ico')
 
-schema = Datafiles('E:\\Shared with Win7\\SlideCrop2.0\\ome.xsd',
-					'E:\\Shared with Win7\\SlideCrop2.0\\help.html',
-					'E:\\Shared with Win7\\SlideCrop2.0\\selectforcrop.png',
-					'E:\\Shared with Win7\\SlideCrop2.0\\manualseg.png',
-					'E:\\Shared with Win7\\SlideCrop2.0\\loadimage.png',
-					'E:\\Shared with Win7\\SlideCrop2.0\\autoseg.png',
-					'E:\\Shared with Win7\\SlideCrop2.0\\applythreshold.png')
+schema = Datafiles('E:\\Shared with Win7\\SlideCrop\\ome.xsd',
+					'E:\\Shared with Win7\\SlideCrop\\help.html',
+					'E:\\Shared with Win7\\SlideCrop\\selectforcrop.png',
+					'E:\\Shared with Win7\\SlideCrop\\manualseg.png',
+					'E:\\Shared with Win7\\SlideCrop\\loadimage.png',
+					'E:\\Shared with Win7\\SlideCrop\\autoseg.png',
+					'E:\\Shared with Win7\\SlideCrop\\applythreshold.png')
 coll = COLLECT( exe,
                a.binaries,
                a.zipfiles,
                a.datas,
-			   schema,
+	       schema,
                upx=True,
                name=os.path.join('dist', 'SlideCrop'))
