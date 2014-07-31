@@ -239,7 +239,7 @@ class SlideCrop(wx.Frame):
 
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
         self.statusbar.SetStatusWidths([-4, -3])
-        self.statusbar.SetStatusText("Daniel Matthews @ 12 Nov 2013", 0)
+        self.statusbar.SetStatusText("Daniel Matthews @ 29 July 2014", 0)
         self.statusbar.SetStatusText("Slide Crop", 1)
 
         self._leftWindow1 = wx.SashLayoutWindow(self, 101, wx.DefaultPosition,
@@ -611,18 +611,18 @@ class SlideCrop(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX,self.OnScaleChange,self.scaleCombo)
         self._pnl.AddFoldPanelWindow(item,self.scaleCombo,
                                      fpb.FPB_ALIGN_WIDTH, -15, 280,30)
-        self.rotText = wx.StaticText(item, -1, "Rotation:")
-        self._pnl.AddFoldPanelWindow(item, self.rotText,
-                                     fpb.FPB_ALIGN_WIDTH, 10, 210,95)
-        self.rotationCombo = wx.ComboBox(item, -1, value="Original",choices=["Original", "Left 90", "Right 90"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
-        self._pnl.AddFoldPanelWindow(item,self.rotationCombo,
-                                     fpb.FPB_ALIGN_WIDTH, -15, 280,30)
+        #self.rotText = wx.StaticText(item, -1, "Rotation:")
+        #self._pnl.AddFoldPanelWindow(item, self.rotText,
+        #                             fpb.FPB_ALIGN_WIDTH, 10, 210,95)
+        #self.rotationCombo = wx.ComboBox(item, -1, value="Original",choices=["Original", "Left 90", "Right 90"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        #self._pnl.AddFoldPanelWindow(item,self.rotationCombo,
+        #                             fpb.FPB_ALIGN_WIDTH, -15, 280,30)
         self.chansText = wx.StaticText(item, -1, "Channels:")
         self._pnl.AddFoldPanelWindow(item, self.chansText,
-                                     fpb.FPB_ALIGN_WIDTH, 5, 30,280)
+                                     fpb.FPB_ALIGN_WIDTH, 25, 30,300)
         self.chans = wx.TextCtrl(item, -1, "",style=wx.TE_CENTRE)
         self._pnl.AddFoldPanelWindow(item, self.chans,
-                                     fpb.FPB_ALIGN_WIDTH, -15, 100, 200)
+                                     fpb.FPB_ALIGN_WIDTH, -15, 90, 220)
         
         ID_CROP = wx.NewId()
         ID_ABORT = wx.NewId()
@@ -1569,12 +1569,10 @@ class SlideCrop(wx.Frame):
     def createOutput(self,selection,roiArray,dlg=None):
         scalefact = int(self.scaleCombo.GetSelection())
         outChanChoice = (self.radio1.GetValue())
-        
         if outChanChoice:
             outChan = range(self.numchannels)
         else:
             outChanString = self.chans.GetValue()
-            
             if outChanString.find(',') == 1:
                 Channels = map(int, outChanString.split(','))
                 outChan = [x-1 for x in Channels]
@@ -1585,7 +1583,7 @@ class SlideCrop(wx.Frame):
                 outChan = []
                 outChan.append(int(self.chans.GetValue())-1)
                 
-        rotation = int(self.rotationCombo.GetSelection()) 
+        rotation = 0#int(self.rotationCombo.GetSelection()) 
         total = len(roiArray) - 1
         for idx in range(len(roiArray)):
             if len(roiArray) > 1:
@@ -1610,7 +1608,7 @@ class SlideCrop(wx.Frame):
             if outputFileChoice:
                 if (idx + 1) < 10:
                     if len(outChan) == 1:
-                        chanstr = str(outChan[0])
+                        chanstr = '0' + str(outChan[0]+1)
                         outfilename = infname + '_' + '00' + str(idx + 1) + '_chan' + chanstr + '.ome.tif'
                     else:
                         outfilename = infname + '_' + '00' + str(idx + 1) + '.ome.tif'
@@ -1970,8 +1968,8 @@ class SlideCrop(wx.Frame):
         self.chansText.Enable(state)
         self.scaleCombo.Enable(state)
         self.scaleText.Enable(state)
-        self.rotationCombo.Enable(state)
-        self.rotText.Enable(state)
+        #self.rotationCombo.Enable(state)
+        #self.rotText.Enable(state)
         self.crop.Enable(state)
         self.cb.Enable(state)
         self.bcb.Enable(state)

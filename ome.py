@@ -3,7 +3,13 @@ import sys
 from uuid import uuid1 as uuid
 from lxml import etree
 from lxml.builder import ElementMaker
-from pylibtiff import TIFFimage
+#from pylibtiff import TIFFimage
+try:
+    from libtiff import TIFF
+except:
+    import traceback
+    traceback.print_exc()
+    raw_input('enter to close')
 import numpy as np
 
 namespace_map=dict(bf = "http://www.openmicroscopy.org/Schemas/BinaryFile/2010-06",
@@ -89,14 +95,15 @@ class ElementBase:
         elif 0:
             print 'NotImplemented: %s.iter_%s(<%s.%s callable>)' % (parent.__class__.__name__, n, nsn, nm)
 
-class TiffDataGenerator:
+class TiffImageGenerator:
     
-    def __init__(self,instrument,filename,input_data,rotation,scalefact):
+    def __init__(self,instrument,filename,input_data,rotation,scalefact,outChan):
         self.instrument = instrument
         self.filename = filename
         self.rotation = rotation
         self.scale = scalefact
         self.data = input_data
+<<<<<<< HEAD
 #
 #    def create_tile(self):
         
@@ -141,27 +148,87 @@ class TiffDataGenerator:
                 ImageDataMemSize = SectionRot.nbytes
                 if ImageDataMemSize > 2e9:
                     raise FileSizeError(2e9)
+=======
+        self.channels = outChan
+        
+    def create_tiles(self,roi,sizeX, sizeY, sizeZ, sizeC, sizeT, tileWidth, tileHeight, description):
+        tif_image = TIFF.open(self.filename, 'w')
+        tile_count = 0
+        for c in range(0, sizeC):
+            if c == 0:
+                tif_image.set_description(description)
+>>>>>>> feature-tiling-output-images
                 
-            if self.instrument == 'Bright-field':
-                itype = np.uint8
-                im_dtype = np.dtype(dict(names = list('rgb'), formats = [itype]*3))
-                ImageData = np.zeros((shape_dum[0],shape_dum[1]),dtype=im_dtype)
-                outChan = list('rgb')
-                idx = -1
-                for c in outChan:
-                    idx += 1
-                    print("Writing channel:  ", c)
-                    section_res = imarray[:,:,idx]
-                    ImageData[c][:,:] = section_res
-                ImageDataMemSize = 100
+            tif_image.tile_image_params(sizeX,sizeY,sizeC,tileWidth,tileHeight)
+            channel = self.channels[c]
+            tile_num_in_channel = 0
+            for tileOffsetY in range(
+                    0, ((sizeY + tileHeight - 1) / tileHeight)):
+
+                for tileOffsetX in range(
+                        0, ((sizeX + tileWidth - 1) / tileWidth)):
+
+                    x = tileOffsetX * tileWidth
+                    y = tileOffsetY * tileHeight
+                    w = tileWidth
+
+                    if (w + x > sizeX):
+                        w = sizeX - x
+
+                    h = tileHeight
+                    if (h + y > sizeY):
+                        h = sizeY - y
+
+                    tile_count += 1
+                    tile_data = self.mktile(roi,channel,x,y,w,h)
+                    tile_dtype = tile_data.dtype
+                    tile = np.zeros((1,tileWidth,tileHeight),dtype=tile_dtype)
+                    tile[0,:h,:w] = tile_data[0,:,:]                     
+                    tif_image.write_tile(tile,x,y)
+                    
+            tif_image.WriteDirectory()
+        tif_image.close()
+        return tile_count
     
-                      
-        except FileSizeError as e:
-            msg = "Error encountered: One or more of the tissue sections generated has exceeded " + str(e.value) + " bytes. Try to reduce the file size by writing single channels or by down-scaling the image"                                
-            dial = wx.MessageDialog(None, msg, 'Error', wx.OK | wx.ICON_ERROR)
-            dial.ShowModal()          
-        return ImageData, ImageDataMemSize
+    def mktile(self,roi,channel,x,y,w,h):
+        row_start = y + roi[0]
+        row_end = row_start + h
+        col_start = x + roi[2]
+        col_end = col_start + w
+        roi = [row_start,row_end,col_start,col_end]
+        tile_data = self.data.get_data_in_channel(self.scale,channel,roi)
+        return tile_data
+        
+    def create_plane(self,roi,sizeX,sizeY,sizeC,description):
+        tif_image = TIFF.open(self.filename, 'w')
+        im_dtype = np.dtype('uint8')
+        image_data = np.zeros((sizeC,sizeY,sizeX),dtype=im_dtype)
+        print 'num channels=',sizeC
+        for c in range(sizeC):
+            if c == 0:
+                tif_image.set_description(description)
+            channel = self.channels[c]
+            imarray = self.mkplane(roi,c)
+            print 'imarray shape:',imarray.shape
             
+            print("Writing channel:  ", c+1)
+            if self.rotation == 0:
+                plane = imarray[0,:,:] 
+            if self.rotation == 1:
+                plane = np.rot90(imarray[0,:,:],1)
+            elif self.rotation == 2:
+                plane = np.rot90(imarray[0,:,:],3)
+                
+            image_data[c,:,:] = plane    
+#        tif_image = TIFFimage(image_data,description=description)
+#        tif_image.write_file(self.filename,compression='lzw') 
+#        del tif_image  
+        tif_image.write_image(image_data, compression='lzw')
+        tif_image.close()
+                        
+    def mkplane(self,roi,channel):
+        return self.data.get_data_in_channel(self.scale,channel,roi)
+
 class Dataset(ElementBase): pass            
 class Group(ElementBase): pass
 class Experimenter(ElementBase): pass
@@ -185,11 +252,11 @@ class OMEBase:
 
     def process(self, options=None, validate=default_validate):
         template_xml = list(self.make_xml())
-        tif_gen = TiffDataGenerator(self.instrument,self.tif_filename,self.imarray,self.rotation,self.scalefact)
-        tif_data, tif_memsize = tif_gen.tif_data_from_imaris(self.roi,self.outChan)
-        self.tif_images[self.instrument,self.tif_filename,self.tif_uuid,self.PhysSize] = tif_data
+        tif_gen = TiffImageGenerator(self.instrument,self.tif_filename,self.imarray,self.rotation,self.scalefact,self.outChan)
+        self.tif_images[self.instrument,self.tif_filename,self.tif_uuid,self.PhysSize] = tif_gen
+
         s = None
-        for (detector, fn, uuid, res), tif_data in self.tif_images.items():
+        for (detector, fn, uuid, res), tif_gen in self.tif_images.items():
             xml= ome.OME(ATTR('xsi','schemaLocation',"%s %s/ome.xsd" % ((namespace_map['ome'],)*2)),
                           UUID = uuid)
             for item in template_xml:
@@ -204,14 +271,11 @@ class OMEBase:
             else:
                 s = etree.tostring(xml, encoding='UTF-8', xml_declaration=True)
             
-            tif_image = TIFFimage(tif_data,description=s)
-            print(tif_data.shape)
-            tif_image.write_file(fn,compression='lzw') 
-            del tif_image  
-            #tif_image.description = s
-            #tif_image.write_file(fn, compression='none')
-            #imsave(fn,tif_data,description=s,photometric='minisblack',resolution=res)
-            
+            if (self.sizeX < 4096) or (self.sizeY < 4096):
+                tif_gen.create_plane(self.roi,self.sizeX,self.sizeY,self.sizeC,s)
+            else:
+                tc = tif_gen.create_tiles(self.roi,self.sizeX, self.sizeY, self.sizeZ, self.sizeC, self.sizeT, self.tile_width, self.tile_height, s)
+                print 'tile count=',tc
             print 'SUCCESS!'
 
         return s
@@ -225,76 +289,7 @@ class OMEBase:
                        UUID = self.temp_uuid)
         for element_cls in self._subelement_classes:
             element_cls(self, xml) # element_cls should append elements to root
-        return xml
-    
-    def make_tif_data(self,instrument,filename,input_data,pixelregion,outChan,rotation,scalefact):
-        try:
-            imarray = input_data.get_data(scalefact, range(len(outChan)),pixelregion)
-            print 'imarray shape=',imarray.shape
-            #imdum = imarray[:,:,0]
-            #section_dum = imdum[pixelregion[0]:pixelregion[1],pixelregion[2]:pixelregion[3]]
-            #shape_dum = section_dum.shape
-            shape_dum = imarray.shape
-            if instrument == 'Fluorescence':
-                im_dtype = np.dtype('uint8')
-                if rotation == 0:
-                    ImageData = np.zeros((len(outChan),shape_dum[0],shape_dum[1]),dtype=im_dtype)
-                else:
-                    ImageData = np.zeros((len(outChan),shape_dum[1],shape_dum[0]),dtype=im_dtype)
-    
-                if len(outChan) > 1:
-                    idx = -1
-                    for c in outChan:
-                        idx += 1
-                        print("Writing channel:  ", c+1)
-                        #im = imarray[:,:,c]
-                        #section = im[pixelregion[0]:pixelregion[1],pixelregion[2]:pixelregion[3]]
-                        section = imarray[:,:,c]
-                        if rotation == 0:
-                            SectionRot = section
-                        elif rotation == 1:
-                            SectionRot = np.rot90(section,1)
-                        elif rotation == 2:
-                            SectionRot = np.rot90(section,3)
-                        ImageData[idx,:,:] = SectionRot
-    
-                else:
-                    #im = imarray[:,:,outChan[0]]
-                    #section = im[pixelregion[0]:pixelregion[1],pixelregion[2]:pixelregion[3]]
-                    section = imarray[:,:,outChan[0]]
-                    if rotation == 0:
-                        SectionRot = section
-                    elif rotation == 1:
-                        SectionRot = np.rot90(section,1)
-                    elif rotation == 2:
-                        SectionRot = np.rot90(section,3)
-                    ImageData[0,:,:] = SectionRot
-                
-                ImageDataMemSize = SectionRot.nbytes
-                if ImageDataMemSize > 2e9:
-                    raise FileSizeError(2e9)
-                
-            if instrument == 'Bright-field':
-                itype = np.uint8
-                im_dtype = np.dtype(dict(names = list('rgb'), formats = [itype]*3))
-                ImageData = np.zeros((shape_dum[0],shape_dum[1]),dtype=im_dtype)
-                outChan = list('rgb')
-                idx = -1
-                for c in outChan:
-                    idx += 1
-                    print("Writing channel:  ", c)
-                    #im = imarray[:,:,idx]
-                    #section_res = im[pixelregion[0]:pixelregion[1],pixelregion[2]:pixelregion[3]]
-                    section_res = imarray[:,:,idx]
-                    ImageData[c][:,:] = section_res
-                ImageDataMemSize = 100
-    
-                      
-        except FileSizeError as e:
-            msg = "Error encountered: One or more of the tissue sections generated has exceeded " + str(e.value) + " bytes. Try to reduce the file size by writing single channels or by down-scaling the image"                                
-            dial = wx.MessageDialog(None, msg, 'Error', wx.OK | wx.ICON_ERROR)
-            dial.ShowModal()          
-        return ImageData, ImageDataMemSize     
+        return xml   
 
     def get_AcquiredDate(self):
         return None
