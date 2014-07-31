@@ -611,18 +611,18 @@ class SlideCrop(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX,self.OnScaleChange,self.scaleCombo)
         self._pnl.AddFoldPanelWindow(item,self.scaleCombo,
                                      fpb.FPB_ALIGN_WIDTH, -15, 280,30)
-        self.rotText = wx.StaticText(item, -1, "Rotation:")
-        self._pnl.AddFoldPanelWindow(item, self.rotText,
-                                     fpb.FPB_ALIGN_WIDTH, 10, 210,95)
-        self.rotationCombo = wx.ComboBox(item, -1, value="Original",choices=["Original", "Left 90", "Right 90"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
-        self._pnl.AddFoldPanelWindow(item,self.rotationCombo,
-                                     fpb.FPB_ALIGN_WIDTH, -15, 280,30)
+        #self.rotText = wx.StaticText(item, -1, "Rotation:")
+        #self._pnl.AddFoldPanelWindow(item, self.rotText,
+        #                             fpb.FPB_ALIGN_WIDTH, 10, 210,95)
+        #self.rotationCombo = wx.ComboBox(item, -1, value="Original",choices=["Original", "Left 90", "Right 90"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        #self._pnl.AddFoldPanelWindow(item,self.rotationCombo,
+        #                             fpb.FPB_ALIGN_WIDTH, -15, 280,30)
         self.chansText = wx.StaticText(item, -1, "Channels:")
         self._pnl.AddFoldPanelWindow(item, self.chansText,
-                                     fpb.FPB_ALIGN_WIDTH, 5, 30,280)
+                                     fpb.FPB_ALIGN_WIDTH, 25, 30,300)
         self.chans = wx.TextCtrl(item, -1, "",style=wx.TE_CENTRE)
         self._pnl.AddFoldPanelWindow(item, self.chans,
-                                     fpb.FPB_ALIGN_WIDTH, -15, 100, 200)
+                                     fpb.FPB_ALIGN_WIDTH, -15, 90, 220)
         
         ID_CROP = wx.NewId()
         ID_ABORT = wx.NewId()
@@ -1583,7 +1583,7 @@ class SlideCrop(wx.Frame):
                 outChan = []
                 outChan.append(int(self.chans.GetValue())-1)
                 
-        rotation = int(self.rotationCombo.GetSelection()) 
+        rotation = 0#int(self.rotationCombo.GetSelection()) 
         total = len(roiArray) - 1
         for idx in range(len(roiArray)):
             if len(roiArray) > 1:
@@ -1968,8 +1968,8 @@ class SlideCrop(wx.Frame):
         self.chansText.Enable(state)
         self.scaleCombo.Enable(state)
         self.scaleText.Enable(state)
-        self.rotationCombo.Enable(state)
-        self.rotText.Enable(state)
+        #self.rotationCombo.Enable(state)
+        #self.rotText.Enable(state)
         self.crop.Enable(state)
         self.cb.Enable(state)
         self.bcb.Enable(state)

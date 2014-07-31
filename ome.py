@@ -136,9 +136,9 @@ class TiffImageGenerator:
                     tile_data = self.mktile(roi,channel,x,y,w,h)
                     tile_dtype = tile_data.dtype
                     tile = np.zeros((1,tileWidth,tileHeight),dtype=tile_dtype)
-                    tile[0,:h,:w] = tile_data[0,:,:]
-                    tile_num_in_channel += 1    
-                    tif_image.write_tile(tile,x,y,tile_num_in_channel)
+                    tile[0,:h,:w] = tile_data[0,:,:]                     
+                    tif_image.write_tile(tile,x,y)
+                    
             tif_image.WriteDirectory()
         tif_image.close()
         return tile_count
@@ -163,13 +163,16 @@ class TiffImageGenerator:
             channel = self.channels[c]
             imarray = self.mkplane(roi,c)
             print 'imarray shape:',imarray.shape
-            image_data[c,:,:] = imarray[0,:,:]
+            
             print("Writing channel:  ", c+1)
+            if self.rotation == 0:
+                plane = imarray[0,:,:] 
             if self.rotation == 1:
-                image_data = np.rot90(image_data,1)
+                plane = np.rot90(imarray[0,:,:],1)
             elif self.rotation == 2:
-                image_data = np.rot90(image_data,3)
+                plane = np.rot90(imarray[0,:,:],3)
                 
+            image_data[c,:,:] = plane    
 #        tif_image = TIFFimage(image_data,description=description)
 #        tif_image.write_file(self.filename,compression='lzw') 
 #        del tif_image  

@@ -79,8 +79,12 @@ class OMETIFF(OMEBase):
             DatasetID = str(self.InputFilename).replace(' ','_')
         else:
             DatasetID = str(self.InputFilename)
-        self.sizeX = self.roi[3] - self.roi[2]
-        self.sizeY = self.roi[1] - self.roi[0]
+        if self.rotation == 0:
+            self.sizeX = self.roi[3] - self.roi[2]
+            self.sizeY = self.roi[1] - self.roi[0]
+        else:
+            self.sizeX = self.roi[1] - self.roi[0]
+            self.sizeY = self.roi[3] - self.roi[2]           
         self.sizeZ = int(ImageData['Z'])
         writeChans = self.outChan
         self.sizeC = len(writeChans)
@@ -120,66 +124,48 @@ class OMETIFF(OMEBase):
         self.tif_filename = self.outputtif_path      
 #        self.tif_images[self.instrument,self.tif_filename,self.tif_uuid,self.PhysSize] = tif_data        
 
-        if self.instrument == 'Fluorescence': 
-            pixels = ome.Pixels(
-                        DimensionOrder=order, ID='Pixels:%s' % (self.instrument),
-                        SizeX = str(self.sizeX), SizeY = str(self.sizeY), SizeZ = str(self.sizeZ), SizeT=str(self.sizeT), SizeC = str(self.sizeC),
-                        Type = self.dtype2PixelIType (dtype), **pixels_d
-                        )
-            if (len(writeChans) > 1):
-                for chan in writeChans:           
-                    chan_dict = channelData[chan]
-                    channel_d['Name'] = chan_dict['Name']
-                    chan_color = chan_dict['Color']
-                    channel = ome.Channel(ID='Channel:0:%s' %(chan), **channel_d)
-                    lpath = ome.LightPath(*lpath_l)
-                    channel.append(lpath)
-                    pixels.append(channel)
-
-                plane_l = []    
-                for idx_chan in range(len(writeChans)):    
-                    d = dict(IFD=str(idx_chan),FirstC=str(idx_chan), FirstZ='0',FirstT='0', PlaneCount='1')
-                    plane_l.append(d)
-            
-                    tiffdata = ome.TiffData(ome.UUID (self.tif_uuid, FileName=self.tif_filename.split("\\")[-1]), **d)
-                    pixels.append(tiffdata)    
-
-                
-            elif len(writeChans) == 1:                           
-                chan_dict = channelData[writeChans[0]]
-                channel_d['Name'] = chan_dict['Name']
+        pixels = ome.Pixels(
+                    DimensionOrder=order, ID='Pixels:%s' % (self.instrument),
+                    SizeX = str(self.sizeX), SizeY = str(self.sizeY), SizeZ = str(self.sizeZ), SizeT=str(self.sizeT), SizeC = str(self.sizeC),
+                    Type = self.dtype2PixelIType (dtype), **pixels_d
+                    )
+        if (len(writeChans) > 1):
+            for chan in writeChans:           
+                chan_dict = channelData[chan]
                 channel_d['Name'] = chan_dict['Name']
                 chan_color = chan_dict['Color']
-                print(chan_color)
-                channel = ome.Channel(ID='Channel:0:%s' %(0), **channel_d)
+                channel = ome.Channel(ID='Channel:0:%s' %(chan), **channel_d)
                 lpath = ome.LightPath(*lpath_l)
                 channel.append(lpath)
                 pixels.append(channel)
-               
-                plane_l = []        
-                d = dict(IFD='0',FirstC='0', FirstZ='0',FirstT='0', PlaneCount='1')
+
+            plane_l = []    
+            for idx_chan in range(len(writeChans)):    
+                d = dict(IFD=str(idx_chan),FirstC=str(idx_chan), FirstZ='0',FirstT='0', PlaneCount='1')
                 plane_l.append(d)
-                
+        
                 tiffdata = ome.TiffData(ome.UUID (self.tif_uuid, FileName=self.tif_filename.split("\\")[-1]), **d)
-                pixels.append(tiffdata)
+                pixels.append(tiffdata)    
+
             
-        if self.instrument == 'Bright-field': 
-            pixels = ome.Pixels(
-                        DimensionOrder=order, ID='Pixels:%s' % (self.instrument),
-                        SizeX = str(self.sizeX), SizeY = str(self.sizeY), SizeZ = str(self.sizeZ), SizeT=str(self.sizeT), SizeC = str(1),
-                        Type = self.dtype2PixelIType (dtype), **pixels_d
-                        )
-            chan_dict = channelData[0]
+        elif len(writeChans) == 1:                           
+            chan_dict = channelData[writeChans[0]]
+            channel_d['Name'] = chan_dict['Name']
+            channel_d['Name'] = chan_dict['Name']
+            chan_color = chan_dict['Color']
+            print(chan_color)
             channel = ome.Channel(ID='Channel:0:%s' %(0), **channel_d)
             lpath = ome.LightPath(*lpath_l)
             channel.append(lpath)
-            pixels.append(channel)           
-
-            plane_l = 1    
-            d = dict(IFD=str(0),FirstC=str(0), FirstZ='0',FirstT='0', PlaneCount='1')          
+            pixels.append(channel)
+           
+            plane_l = []        
+            d = dict(IFD='0',FirstC='0', FirstZ='0',FirstT='0', PlaneCount='1')
+            plane_l.append(d)
+            
             tiffdata = ome.TiffData(ome.UUID (self.tif_uuid, FileName=self.tif_filename.split("\\")[-1]), **d)
             pixels.append(tiffdata)
-                 
+                             
         date = ImageData['RecordingDate']
         date = date.replace(' ','T')
         description = 'This is section number ' + str(self.ID) + ' of ' + str(self.Total) + \
