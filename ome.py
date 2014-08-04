@@ -103,52 +103,6 @@ class TiffImageGenerator:
         self.rotation = rotation
         self.scale = scalefact
         self.data = input_data
-<<<<<<< HEAD
-#
-#    def create_tile(self):
-        
-#    def create_plane(self):
-#        
-    def tif_data_from_imaris(self,pixelregion,outChan):
-        try:
-            imarray = self.data.get_data(self.scale, range(len(outChan)),pixelregion)
-            print 'imarray shape=',imarray.shape
-            shape_dum = imarray.shape
-            if self.instrument == 'Fluorescence':
-                im_dtype = np.dtype('uint8')
-                if self.rotation == 0:
-                    ImageData = np.zeros((len(outChan),shape_dum[0],shape_dum[1]),dtype=im_dtype)
-                else:
-                    ImageData = np.zeros((len(outChan),shape_dum[1],shape_dum[0]),dtype=im_dtype)
-    
-                if len(outChan) > 1:
-                    idx = -1
-                    for c in outChan:
-                        idx += 1
-                        print("Writing channel:  ", c+1)
-                        section = imarray[:,:,c]
-                        if self.rotation == 0:
-                            SectionRot = section
-                        elif self.rotation == 1:
-                            SectionRot = np.rot90(section,1)
-                        elif self.rotation == 2:
-                            SectionRot = np.rot90(section,3)
-                        ImageData[idx,:,:] = SectionRot
-    
-                else:
-                    section = imarray[:,:,outChan[0]]
-                    if self.rotation == 0:
-                        SectionRot = section
-                    elif self.rotation == 1:
-                        SectionRot = np.rot90(section,1)
-                    elif self.rotation == 2:
-                        SectionRot = np.rot90(section,3)
-                    ImageData[0,:,:] = SectionRot
-                
-                ImageDataMemSize = SectionRot.nbytes
-                if ImageDataMemSize > 2e9:
-                    raise FileSizeError(2e9)
-=======
         self.channels = outChan
         
     def create_tiles(self,roi,sizeX, sizeY, sizeZ, sizeC, sizeT, tileWidth, tileHeight, description):
@@ -157,7 +111,6 @@ class TiffImageGenerator:
         for c in range(0, sizeC):
             if c == 0:
                 tif_image.set_description(description)
->>>>>>> feature-tiling-output-images
                 
             tif_image.tile_image_params(sizeX,sizeY,sizeC,tileWidth,tileHeight)
             channel = self.channels[c]
