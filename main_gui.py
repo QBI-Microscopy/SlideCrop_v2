@@ -623,6 +623,12 @@ class SlideCrop(wx.Frame):
         self.chans = wx.TextCtrl(item, -1, "",style=wx.TE_CENTRE)
         self._pnl.AddFoldPanelWindow(item, self.chans,
                                      fpb.FPB_ALIGN_WIDTH, -15, 90, 220)
+        self.comprText = wx.StaticText(item, -1, "Compression:")
+        self._pnl.AddFoldPanelWindow(item, self.comprText,
+                                 fpb.FPB_ALIGN_WIDTH, -20, 210,95)
+        self.comprCombo = wx.ComboBox(item, -1, value="jpeg",choices=["jpeg", "lzw"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self._pnl.AddFoldPanelWindow(item,self.comprCombo,
+                                     fpb.FPB_ALIGN_WIDTH, -15, 280,30)
         
         ID_CROP = wx.NewId()
         ID_ABORT = wx.NewId()
@@ -1569,6 +1575,7 @@ class SlideCrop(wx.Frame):
     def createOutput(self,selection,roiArray,dlg=None):
         scalefact = int(self.scaleCombo.GetSelection())
         outChanChoice = (self.radio1.GetValue())
+        compression = self.comprCombo.GetValue()
         if outChanChoice:
             outChan = range(self.numchannels)
         else:
@@ -1614,7 +1621,7 @@ class SlideCrop(wx.Frame):
                         outfilename = infname + '_' + '00' + str(idx + 1) + '.ome.tif'
                 elif (idx + 1) >= 10:
                     outfilename = infname + '_' + 'section_0' + str(idx + 1) + '.ome.tif'
-                OMETIFF(self.userDetails, self.infilename, outfilename, str((idx+1)), total, self.ImarisInput, pixelregion,outChan,scalefact,rotation).process()
+                OMETIFF(self.userDetails, self.infilename, outfilename, compression, str((idx+1)), total, self.ImarisInput, pixelregion,outChan,scalefact,rotation).process()
             else:
                 if (idx + 1) < 10:
                     outfilenameImaris = infname + '_' + 'section_00' + str(idx + 1) + '.ims'

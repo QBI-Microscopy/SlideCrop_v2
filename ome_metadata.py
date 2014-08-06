@@ -25,7 +25,7 @@ class FileSizeError(Exception):
 class OMETIFF(OMEBase):
 
     prefix = 'ome'
-    def __init__(self, userDetails, inpath, outpath, section_id, total_sections, input_data, pixelregion, outChan, scalefact, rotation):
+    def __init__(self, userDetails, inpath, outpath, compression, section_id, total_sections, input_data, pixelregion, outChan, scalefact, rotation):
         OMEBase.__init__(self)
         self.outputtif_path = outpath
         self.ID = section_id
@@ -41,6 +41,7 @@ class OMETIFF(OMEBase):
         self.scalefact = scalefact
         self.tile_width = 1024
         self.tile_height = 1024
+        self.compression = compression
         if not userDetails:
             current_user = 'QBIuser'
             current_group = 'QBIgroup'
