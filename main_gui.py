@@ -626,7 +626,7 @@ class SlideCrop(wx.Frame):
         self.comprText = wx.StaticText(item, -1, "Compression:")
         self._pnl.AddFoldPanelWindow(item, self.comprText,
                                  fpb.FPB_ALIGN_WIDTH, -20, 210,95)
-        self.comprCombo = wx.ComboBox(item, -1, value="jpeg",choices=["jpeg", "lzw"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.comprCombo = wx.ComboBox(item, -1, value="lzw",choices=["lzw", "jpeg"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self._pnl.AddFoldPanelWindow(item,self.comprCombo,
                                      fpb.FPB_ALIGN_WIDTH, -15, 280,30)
         
