@@ -97,13 +97,14 @@ class ElementBase:
 
 class TiffImageGenerator:
     
-    def __init__(self,instrument,filename,input_data,rotation,scalefact,outChan):
+    def __init__(self,instrument,filename,input_data,rotation,scalefact,outChan,compression):
         self.instrument = instrument
         self.filename = filename
         self.rotation = rotation
         self.scale = scalefact
         self.data = input_data
         self.channels = outChan
+        self.compression = compression
         
     def create_tiles(self,roi,sizeX, sizeY, sizeZ, sizeC, sizeT, tileWidth, tileHeight, description):
         tif_image = TIFF.open(self.filename, 'w')
@@ -112,7 +113,7 @@ class TiffImageGenerator:
             if c == 0:
                 tif_image.set_description(description)
                 
-            tif_image.tile_image_params(sizeX,sizeY,sizeC,tileWidth,tileHeight)
+            tif_image.tile_image_params(sizeX,sizeY,sizeC,tileWidth,tileHeight,self.compression)
             channel = self.channels[c]
             tile_num_in_channel = 0
             for tileOffsetY in range(
@@ -176,7 +177,7 @@ class TiffImageGenerator:
 #        tif_image = TIFFimage(image_data,description=description)
 #        tif_image.write_file(self.filename,compression='lzw') 
 #        del tif_image  
-        tif_image.write_image(image_data, compression='lzw')
+        tif_image.write_image(image_data, compression=self.compression)
         tif_image.close()
                         
     def mkplane(self,roi,channel):
@@ -205,7 +206,7 @@ class OMEBase:
 
     def process(self, options=None, validate=default_validate):
         template_xml = list(self.make_xml())
-        tif_gen = TiffImageGenerator(self.instrument,self.tif_filename,self.imarray,self.rotation,self.scalefact,self.outChan)
+        tif_gen = TiffImageGenerator(self.instrument,self.tif_filename,self.imarray,self.rotation,self.scalefact,self.outChan,self.compression)
         self.tif_images[self.instrument,self.tif_filename,self.tif_uuid,self.PhysSize] = tif_gen
 
         s = None
