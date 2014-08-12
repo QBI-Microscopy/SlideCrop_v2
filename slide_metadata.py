@@ -12,18 +12,17 @@ class SlideImage:
         
     def get_data_in_channel(self, selectedRes, channelNum, region=None):
         imSize = self.image_size_from_data()[selectedRes]
+        respath = '/DataSet/ResolutionLevel ' + str(selectedRes) + '/'
+        imrespath = respath + 'TimePoint 0' + '/' + 'Channel ' + str(channelNum)        
+        pathToData = self.infile[imrespath]
+        data = pathToData["Data"]
         if region:
-            regionW = region[3]-region[2]
-            regionH = region[1]-region[0]
+            regionH,regionW = data[0,region[0]:region[1],region[2]:region[3]].shape
         else:
             regionW = imSize[0]
             regionH = imSize[1]
         im_dtype = np.dtype('uint8')
-        respath = '/DataSet/ResolutionLevel ' + str(selectedRes) + '/'
-        imrespath = respath + 'TimePoint 0' + '/' + 'Channel ' + str(channelNum)
         self.imarray = np.zeros((1,regionH,regionW),dtype=im_dtype)
-        pathToData = self.infile[imrespath]
-        data = pathToData["Data"]
         if region:
             self.imarray[0,:,:] = data[0,region[0]:region[1],region[2]:region[3]]
         else:

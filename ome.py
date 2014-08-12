@@ -132,9 +132,12 @@ class TiffImageGenerator:
                     h = tileHeight
                     if (h + y > sizeY):
                         h = sizeY - y
-
+                    
                     tile_count += 1
                     tile_data = self.mktile(roi,channel,x,y,w,h)
+                    if (h != tile_data.shape[1]) or (w != tile_data.shape[2]):
+                        h = tile_data.shape[1]
+                        w = tile_data.shape[2]
                     tile_dtype = tile_data.dtype
                     tile = np.zeros((1,tileWidth,tileHeight),dtype=tile_dtype)
                     tile[0,:h,:w] = tile_data[0,:,:]                     
