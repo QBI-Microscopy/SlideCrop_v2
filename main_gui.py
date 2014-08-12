@@ -1473,16 +1473,16 @@ class SlideCrop(wx.Frame):
             H = float(roiY[1] - roiY[0])
             W = float(roiX[1] - roiX[0])
 
-            padX = 0.05*W
-            padY = 0.05*H
+#            padX = 0.05*W
+#            padY = 0.05*H
+#
+#            rowstart = rowstart - padY
+#            rowend = rowend + padY
+#            colstart = colstart - padX
+#            colend = colend + padY
 
-            rowstart = rowstart - padY
-            rowend = rowend + padY
-            colstart = colstart - padX
-            colend = colend + padY
-
-            padW = int(colend - colstart)
-            padH = int(rowend - rowstart)
+#            padW = int(colend - colstart)
+#            padH = int(rowend - rowstart)
             
             if (rowstart < 0):
                 rowstart = 0
@@ -1494,7 +1494,8 @@ class SlideCrop(wx.Frame):
             if (colend > self.displayData.GetWidth()):
                 colend = self.displayData.GetWidth() - 1
                 
-            roi = (colstart,rowstart,padW,padH)
+#            roi = (colstart,rowstart,padW,padH)
+            roi = (colstart,rowstart,W,H)
             sortedROIList.append(roi)
         
         for roi in sortedROIList:
