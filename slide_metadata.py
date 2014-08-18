@@ -17,14 +17,22 @@ class SlideImage:
         pathToData = self.infile[imrespath]
         data = pathToData["Data"]
         if region:
-            regionH,regionW = data[0,region[0]:region[1],region[2]:region[3]].shape
+            try:
+                regionH,regionW = data[0,region[0]:region[1],region[2]:region[3]].shape
+                print 'regionW,regionH:',regionW,regionH
+            except:
+                regionW = region[3]-region[2]
+                regionH = region[1]-region[0]
         else:
             regionW = imSize[0]
             regionH = imSize[1]
         im_dtype = np.dtype('uint8')
         self.imarray = np.zeros((1,regionH,regionW),dtype=im_dtype)
         if region:
-            self.imarray[0,:,:] = data[0,region[0]:region[1],region[2]:region[3]]
+            try:
+                self.imarray[0,:,:] = data[0,region[0]:region[1],region[2]:region[3]]
+            except:
+                return self.imarray
         else:
             self.imarray[0:,:] = data[0,:,:]            
         return self.imarray  
