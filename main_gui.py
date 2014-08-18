@@ -805,7 +805,7 @@ class SlideCrop(wx.Frame):
                 self.list.DeleteAllItems()
                 for obj in self.contents:
                     key = self.contents.index(obj)
-                    self._addItemToList(obj,key)
+                    self._addItemToList(obj,key,self.scaleCombo.GetSelection())
         if handled: return
 
         # otherwise handle it ourselves
@@ -1596,8 +1596,7 @@ class SlideCrop(wx.Frame):
         for idx in range(len(roiArray)):
             if len(roiArray) > 1:
                 wx.CallAfter(dlg.Update,idx)
-            outstr = "Processing section number:  " + str(idx+1)
-            print outstr
+            print "Processing section number:  " + str(idx+1)
             
             roi = roiArray[idx]
             rowstart = roi[1]
@@ -1622,6 +1621,7 @@ class SlideCrop(wx.Frame):
                         outfilename = infname + '_' + '00' + str(idx + 1) + '.ome.tif'
                 elif (idx + 1) >= 10:
                     outfilename = infname + '_' + 'section_0' + str(idx + 1) + '.ome.tif'
+                    
                 OMETIFF(self.userDetails, self.infilename, outfilename, compression, str((idx+1)), total, self.ImarisInput, pixelregion,outChan,scalefact,rotation).process()
             else:
                 if (idx + 1) < 10:
