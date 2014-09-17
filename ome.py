@@ -180,7 +180,7 @@ class TiffImageGenerator:
 #        tif_image = TIFFimage(image_data,description=description)
 #        tif_image.write_file(self.filename,compression='lzw') 
 #        del tif_image  
-        tif_image.write_image(image_data, compression=self.compression)
+        tif_image.write_image(image_data, compression=self.compression.encode('ascii','ignore'))
         tif_image.close()
                         
     def mkplane(self,roi,channel):
@@ -228,7 +228,7 @@ class OMEBase:
             else:
                 s = etree.tostring(xml, encoding='UTF-8', xml_declaration=True)
             
-            if (self.sizeX < 4096) or (self.sizeY < 4096):
+            if (self.sizeX < 4096) and (self.sizeY < 4096):
                 tif_gen.create_plane(self.roi,self.sizeX,self.sizeY,self.sizeC,s)
             else:
                 tc = tif_gen.create_tiles(self.roi,self.sizeX, self.sizeY, self.sizeZ, self.sizeC, self.sizeT, self.tile_width, self.tile_height, s)
