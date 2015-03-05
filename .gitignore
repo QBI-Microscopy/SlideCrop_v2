@@ -1,3 +1,5 @@
 dist/
 build/
 libtiff.dll
+*.pyc
+.DS_Store
