@@ -1,4 +1,3 @@
-#from __future__ import print_function
 import math as m
 import numpy as np
 from ome import ome, OMEBase
@@ -50,15 +49,24 @@ class OMETIFF(OMEBase):
 
         #Rotation of crop boxes
         self.rotation = rotation
+
+        #roi is an array of [start row, end row, start column, end column]
         self.roi = pixelregion
 
         #Slide Metadata from .IMS file.
+        #Object defined in slide_metadata
         self.meta = SlideImage(self.InputPath)
+
+        # mode about slideImage Microscope Mode (Deconvolution parameter)
         self.mode = self.meta.micro_mode()
+
         self.scalefact = scalefact
         self.tile_width = 1024
         self.tile_height = 1024
         self.compression = compression
+
+
+        #assign current user and group and add to people, groups dict
         if not userDetails:
             current_user = 'QBIuser'
             current_group = 'QBIgroup'
@@ -72,10 +80,14 @@ class OMETIFF(OMEBase):
                                     institution='Queensland Brain Institute', groups = current_group)  
         if current_group not in groups:
             groups[current_group] = dict(name = userDetails[1], contact_id = userDetails[0])
-        
+
+
+        #update current user and group due to above
         self.current_user = current_user
         self.current_group = current_group
-    
+
+
+
     def iter_Image(self, func):
 #        get the meta data dictionaries
         meta = self.meta
@@ -206,7 +218,10 @@ class OMETIFF(OMEBase):
             
         e = func (ID='Dataset:%s' % (DatasetID))
         yield e
-        
+
+    """
+    Iterator for the experimenters in people dictionary
+    """
     def iter_Experimenter(self, func):
         expid = self.current_user
         d = people[expid]
@@ -222,7 +237,10 @@ class OMETIFF(OMEBase):
         
         e.append (ome.GroupRef(ID='Group:%s' % g))
         yield e 
-        
+
+    """
+    Iterator for the Groups in groups dictionary
+    """
     def iter_Group(self, func):
         groupid = self.current_group
         d = groups[groupid]
@@ -232,10 +250,17 @@ class OMETIFF(OMEBase):
         if 'contact_id' in d:
             e.append (ome.Contact(ID='Experimenter:%s' % (d['contact_id'])))
         yield e
-            
+
+
+    """
+    Iterate through instruments as specified in get_instrument
+    """
     def iter_Instrument(self,func):
         yield self.get_Instrument(func)
-        
+
+    """
+    Iterate through Instruments from imaris datasetinfo in the meta attribute(SlideImage object)
+    """
     def get_Instrument(self,func):
         if self.mode == 'MetaCyte TL':
             self.instrument = 'Bright-field Slide Scanner'
