@@ -19,7 +19,7 @@ class SlideImage:
         if region:
             try:
                 regionH,regionW = data[0,region[0]:region[1],region[2]:region[3]].shape
-                print 'regionW,regionH:',regionW,regionH
+                print ('regionW,regionH:',regionW,regionH)
             except:
                 regionW = region[3]-region[2]
                 regionH = region[1]-region[0]
@@ -45,7 +45,7 @@ class SlideImage:
         else:
             regionW = imSize[0]
             regionH = imSize[1]
-        print 'regionw, regionh:',regionW,regionH
+        print ('regionw, regionh:',regionW,regionH)
         im_dtype = np.dtype('uint8')
         if type(channelNum) == list: #if it is a list we are either pulling RGB or all channels for cropping
             numChannels = self.numChannels

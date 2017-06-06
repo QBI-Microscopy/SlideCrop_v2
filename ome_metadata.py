@@ -4,9 +4,7 @@ import numpy as np
 from ome import ome, OMEBase
 import os
 from slide_metadata import SlideImage
-import wx
-from matplotlib import pyplot
-import PIL
+
 
 groups = dict(
               QBIgroup=dict(name = 'QBIgroup', contact_id = 'QBIuser'))
@@ -17,25 +15,44 @@ people = dict(
                )
 
 class FileSizeError(Exception):
+    """
+    Error SubClass for file size errors (i.e. dimensions etc)
+    """
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)                
 
 class OMETIFF(OMEBase):
-
+    """
+    Base Class for dealing with OMETIFF Files. Final output file. 
+        
+    """
     prefix = 'ome'
     def __init__(self, userDetails, inpath, outpath, compression, section_id, total_sections, input_data, pixelregion, outChan, scalefact, rotation):
         OMEBase.__init__(self)
+
+        # Output file directory
         self.outputtif_path = outpath
+
         self.ID = section_id
         self.Total = total_sections
         self.InputPath = inpath
+
+        #.IMS file directory path
         self.InputFilename = self.InputPath.split("\\")[-1]
+
+        #input .IMS image data
         self.imarray = input_data
+
+        #output Channel
         self.outChan = outChan
+
+        #Rotation of crop boxes
         self.rotation = rotation
         self.roi = pixelregion
+
+        #Slide Metadata from .IMS file.
         self.meta = SlideImage(self.InputPath)
         self.mode = self.meta.micro_mode()
         self.scalefact = scalefact
