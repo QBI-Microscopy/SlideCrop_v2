@@ -11,7 +11,6 @@ import wx.combo
 import wx.html
 from slide_metadata import SlideImage
 from ome_metadata import OMETIFF
-import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage 
@@ -131,6 +130,8 @@ def GetExpandedIconImage():
     stream = cStringIO.StringIO(GetExpandedIconData())
     return wx.ImageFromStream(stream)
 
+#  Embedded Images for the GUI
+#  Stored in Byte form to remove dependency on file directories of installed computers
 
 cross_cursor = PyEmbeddedImage(
     "iVBORw0KGgoAAAANSUhEUgAAABcAAAAXCAYAAADgKtSgAAAABHNCSVQICAgIfAhkiAAAAAlwSF"
@@ -164,9 +165,11 @@ rectIconSel = PyEmbeddedImage(
     "nvuiBD8QNPcWsFicGaYE7tMh7rf2n0EJSlCCLwi6ZRcu1ClBoEp77D+DEgx5tkhVs01ZXE8WEAIa"
     "3vhnAAAAAElFTkSuQmCC")
 
+#  Dictionary of above
 toolIconImages = dict([('selectIcon',selectIcon),('selectIconSel',selectIconSel),
                        ('rectIcon',rectIcon),('rectIconSel',rectIconSel)])
-    
+
+#  Embedded image
 slidecrop = PyEmbeddedImage(    
     "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAABmUlEQVR42mNgYNgBRYoHGTKvMEReY"
     "ODcDeQyMW8Pym+qXJSV1lXKxbcJoQxKGR5j+Pid4ccPEFr/HCgSXtKw44cDBBXPzsXQcOotVDUYMao"
@@ -451,7 +454,7 @@ class SlideCrop(wx.Frame):
         style.SetSecondColour(col2)
         style.SetCaptionStyle(mystyle)
         
-        # panel for image import    
+        # "Import Slide" Panel of GUI
         item = self._pnl.AddFoldPanel("Import slide", collapsed=False,
                                       foldIcons=IconImages)
         self._pnl.ApplyCaptionStyle(item, style)
@@ -466,7 +469,7 @@ class SlideCrop(wx.Frame):
         self._pnl.AddFoldPanelWindow(item, wx.StaticText(item,-1,""),
                                      fpb.FPB_ALIGN_WIDTH, 5)
 
-        # panel for image processing    
+        # "Image Processing" Panel of GUI
         item = self._pnl.AddFoldPanel("Image processing", collapsed=False,
                                       foldIcons=IconImages)
 
@@ -528,7 +531,7 @@ class SlideCrop(wx.Frame):
 ##                                           "select", "Selection Tool", mode=wx.ITEM_RADIO)
 ##        self.rectIcon    = ToolPaletteToggle(item, id_RECT,
 ##                                           "rect", "Rectangle Tool", mode=wx.ITEM_RADIO)
-        # Create the tools
+        # Create the tools for Select and Draw buttons
         self.tools = {
             'select'  : (self.selectIcon,   SelectDrawingTool()),
             'rect'    : (self.rectIcon,     RectDrawingTool())
@@ -543,8 +546,14 @@ class SlideCrop(wx.Frame):
                                      fpb.FPB_ALIGN_WIDTH,-41,190,100)
         self._pnl.AddFoldPanelWindow(item, self.rectIcon,
                                  fpb.FPB_ALIGN_WIDTH,-23,280,10)
-        
-        #new fold panel for regions control
+
+
+
+
+
+
+
+        # "Regions of Interest" Gui fold panel
 
         item = self._pnl.AddFoldPanel("Regions of interest", False, foldIcons=IconImages)
         style.SetFirstColour(col1)
@@ -641,7 +650,7 @@ class SlideCrop(wx.Frame):
         self._pnl.AddFoldPanelWindow(item, wx.StaticText(item,-1,""),
                                      fpb.FPB_ALIGN_WIDTH, 5)
 
-        # panel for display options    
+        # "Display options" Gui fold panel
         item = self._pnl.AddFoldPanel("Display options", collapsed=False,
                                       foldIcons=IconImages)
         self.dispOpts = item
@@ -652,6 +661,7 @@ class SlideCrop(wx.Frame):
 
         self.bcb = wx.combo.BitmapComboBox(item, -1,"",choices=[],style=wx.CB_READONLY)
 
+        # add options to bitmap combo box (choice box on right)
         for k, img in images.iteritems():
             name = k
             obj = img
@@ -661,7 +671,10 @@ class SlideCrop(wx.Frame):
         self.bcb.SetSelection(0)
         self.bcb.Show()
 
+        # bind bcb Combo Box selection to event
         self.Bind(wx.EVT_COMBOBOX, self.OnCombo, self.bcb)
+
+        # add above to panel
         self._pnl.AddFoldPanelWindow(item, self.cb,
                                  fpb.FPB_ALIGN_WIDTH,5,10,270)
         self._pnl.AddFoldPanelWindow(item, self.bcb,
@@ -690,6 +703,7 @@ class SlideCrop(wx.Frame):
  
         self.Destroy()
 
+    ## dialog box for user details display
     def OnSettings(self,event):
         dlg = SettingsDialog(self, -1, "User Details", size=(500, 400),
                          #style=wx.CAPTION | wx.SYSTEM_MENU | wx.THICK_FRAME,
@@ -775,7 +789,8 @@ class SlideCrop(wx.Frame):
         if self.image is None: return
         # Translate event into canvas coordinates and pass to current tool
         origx,origy = event.X, event.Y
-        pt = self._getEventCoordinates(event) 
+        pt = self._getEventCoordinates(event)
+
         #magic numbers to prevent drawing outside image area
         if self.image:
             limits = imScaled.GetSize()
@@ -1056,10 +1071,13 @@ class SlideCrop(wx.Frame):
     def fbbCallback(self,evt):
         filters = 'Imaris files (*.ims)|*.ims'
         dialog = wx.FileDialog( None, message = 'Open a slide image ...', wildcard=filters, style = wx.OPEN | wx.MULTIPLE )
+        # dialog box to import .IMS file
         if dialog.ShowModal() == wx.ID_OK:
             if self.image and self.contents:
                 self.wipeOldData()
             self.selectedFile = dialog.GetPaths()
+
+        # Setting the Data values for use in GUI and back-end proccessing
         for selection in self.selectedFile:
             self.infilename = selection
             self.ImarisInput = SlideImage(self.infilename)
@@ -1075,6 +1093,11 @@ class SlideCrop(wx.Frame):
                 self.radio2.Show()
                 self.chans.Show()
                 self.chansText.Show()
+
+            # if its not a "metaCyte FL" mode than hide the following:
+            #     -  radio 1: "All Channels" select radio button
+            #     -  radio 2: "Selected Channels" select radio button
+            #     -  chans and chansText: The text field for specifying specific values
             else:
                 self.curChannelIdx = [0,1,2]
                 self.curChannelName = 'TL'
@@ -1082,6 +1105,8 @@ class SlideCrop(wx.Frame):
                 self.radio2.Hide()
                 self.chans.Hide()
                 self.chansText.Hide()
+
+            # Try to specify Channel Colour, default grey
             try:
                 colour = flouroColors[self.curChannelName]
             except:
@@ -1089,6 +1114,13 @@ class SlideCrop(wx.Frame):
             self.RetrieveImage(self.curChannelIdx,colour)
         self.fbText.SetValue(selection)
 
+    """
+    Resets Gui void of previous data settings. 
+    - removes the list of "Display options" options
+    - empties self.com (Always empty and is never used)
+    - Removes all ROI from "Regions of interest" Table
+    - empties list of DrawingObjects
+    """
     def wipeOldData(self):
         self.com = []
         self.dispOpts.Hide()
@@ -1096,19 +1128,34 @@ class SlideCrop(wx.Frame):
         if self.contents:
             self.contents = []
 
+
+    """
+    Retrieves and configures the GUI image for the Imaris Data at the given channel Num and colour option
+    """
     def RetrieveImage(self,channelNum,colour):
+        # get Slide data from SlideImage object for inresLevel and channelNum
         self.wholeSlideData = self.ImarisInput.get_data(self.inresLevel, channelNum)
+
+        # converts image into a String representation and sets it as the global variable im
         self.displayData = self.GetwxImage(self.wholeSlideData,colour)
         setIm(self.displayData)
+
+        # redraw, configure and refresh the new image
         self.rescaleDisplayImage()
         self.requestRedraw()
         self.setNewImageParams()
         self.drawPanel.Refresh()
+
+        # set Display option choice box options if correct mode
         if self.mode == 'MetaCyte FL':
             idx = images.keys().index(colour)
             self.bcb.SetSelection(idx)
             self.dispOpts.Show()
 
+
+    """
+    return a wxImage Object from the given .IMS data and desired colour
+    """
     def GetwxImage( self, plane, colour):
         r,g,b = self.assignColors(plane,colour)
         imwidth = plane.shape[1]
@@ -1121,6 +1168,10 @@ class SlideCrop(wx.Frame):
         image.SetData( array.tostring())
         return image
 
+    """
+    Returns an r,g,b repreentation of the desired plane with the given colour as a weighting factor. 
+    colour must be in LUTS.keys()
+    """
     def assignColors(self,plane,colour):
         cmap = LUTS[colour]
         bw = self.applyThreshold(plane)
@@ -1136,9 +1187,11 @@ class SlideCrop(wx.Frame):
             b = plane[:,:,2]*cmap[2]
             r[bw] = 255           
         return r,g,b
-        
+
+
     def applyThreshold(self,plane):
         if self.mode == 'MetaCyte TL':
+        #   return plane of x,y,0 and invert
             inverted = plane[:,:,0]
             inverted = np.subtract(255,inverted)
             bw = (inverted > 0) & (inverted > self.threshold)
@@ -1147,6 +1200,9 @@ class SlideCrop(wx.Frame):
             bw = (plane[:,:,0] > 0) & (plane[:,:,0] > self.threshold)
         return bw
 
+    """
+    ReScales the display image 
+    """
     def rescaleDisplayImage(self):
         self.scale = float(self.panelSize[1]) / float(self.displayData.GetHeight())
         newWidth = int(self.displayData.GetWidth() * self.scale)
@@ -1154,6 +1210,9 @@ class SlideCrop(wx.Frame):
         imgScaled = self.displayData.Scale(newWidth, newHeight,wx.IMAGE_QUALITY_NORMAL)
         setImScaled(imgScaled)
 
+    """
+    Adds the possible channels into the "Display options" check boxes    
+    """
     def assignChannelsCombo(self,channelNames):
         for chan in channelNames:
             self.cb.Append(chan)
@@ -1358,21 +1417,41 @@ class SlideCrop(wx.Frame):
     # == Image segmentation Methods ==
     # ==================================
 
+
+    """
+    Event Handler for "Segment" Button in "Image processing" Panel of GUI
+    """
     def OnSegment(self,event):
         self.jobID += 1
         self.wipeOldData()
+
+        # Disable Gui except for "Abort crop!" button in ""Regions of interest" panel
         self._switchControlState(False)
         self.abortCrop.Enable(False)
+
+        # Get Values from "Fill" and "Erosion" and fill text fields in "Image Proccessing" panel of GUI
         self.fillsize = int(self.fill.GetValue())
         self.erosize = int(self.ero.GetValue())
 
+        #Duplicate copy of "Erosion" for iteration purposes
+        # From usage it should be the number of iterations the erosion occurs
         self.eroiter = int(self.ero.GetValue())
-        delayedresult.startWorker(self.autoCreatedObjects, self.processImage, 
+
+        #Signal Worker so that self.processImage (Worker Function) sends its data into self.autoCreatedObjects(Consumer Function)
+        # wargs/ wkwargs is the sent data
+        # In this case not used alot, just to check if jobIDs match
+        delayedresult.startWorker(self.autoCreatedObjects, self.processImage,
                                   wargs=(self.jobID,self.abortEvent), jobID=self.jobID)
 
+    """
+    Event Handler for "Abort" Button in "Image processing" Panel of GUI
+    """
     def OnSegmentAbort(self,event):
         self.abortEvent.set()
-        
+
+    """
+    Worker Function for onSegment Handler. Passes jobId and triggers self.autoCreatedObject() as a worker/consumer pair
+    """
     def processImage(self,jobID,abortEvent):
         if self.mode == 'MetaCyte TL':
             inverted = self.wholeSlideData[:,:,0]
@@ -1380,38 +1459,67 @@ class SlideCrop(wx.Frame):
             bw = (inverted > 0) & (inverted > self.threshold)
         elif self.mode == 'MetaCyte FL':
             bw = (self.wholeSlideData[:,:,0] > 0) & (self.wholeSlideData[:,:,0] > self.threshold)                
-            
+
+        # Size of the structuring element in the morphological fill
         fillsize = [self.fillsize,self.fillsize]
+
+        #Size of the structuring element for the morphological erosion
         erosize = [self.erosize,self.erosize]
-        
+
+        #Perform a binary fill followed by eroiter number of binary erosions
         bwfill = ndimage.binary_fill_holes(bw,structure=np.ones(fillsize))
         bwerode = ndimage.binary_erosion(bwfill,structure=np.ones(erosize),iterations=self.eroiter)
+
+
         labeled_type = np.dtype('uint8')
+
+        # Get the geatures and count in the final (filled then eroded ndarray)
         imlabeled,num_features = ndimage.measurements.label(bwerode,output=labeled_type)
         sizes = ndimage.sum(bwerode, imlabeled, range(num_features+1))
         mask_size = sizes < 1000
+
+        # get non-object pixels and set to zero
         remove_pixel = mask_size[imlabeled]
         imlabeled[remove_pixel] = 0
         labels = np.unique(imlabeled)
+
+        # ndimage
         label_clean = np.searchsorted(labels, imlabeled)
-        
+
+
+        # Iterate through range and make array of 0, 1, ..., len(labels)
         lab = []    
         for i in range(len(labels) - 1):
             lab.append(i + 1)
         
         self.l = lab    
         objs = ndimage.measurements.find_objects(label_clean,max_label=len(labels))
+        # If any objects have been found, return
+        # return value will be array of tuple of 2 slice Objects
+        # [(slice(0, 2, None), slice(0, 3, None)), (slice(2, 5, None), slice(2, 5, None))]
+        # Analogous to label_clean[0:2, 0:3] for the first tuple
         if objs:
             output_objs = objs
         data = label_clean
         return output_objs     
 
+    """
+    Delayed function after its worker method: processImage()
+    Gets the calculated object from the worker method (an Array of Slice object pairs) and configures the GUI
+    and data models for them. 
+    Updates the canvas, ROI Table in "Regions of interest" panel, and the back end data. 
+    """
     def autoCreatedObjects(self,delayedResult):
+
+        # Check whether the jobID is still valid
+        # i.e something significant hasn't interjected itself between processImage() and autoCreatedObjects()
         jobID = delayedResult.getJobID()
         assert jobID == self.jobID
+
+        # attempt to assign the returned values from processImage(), else through Exception message box and return
         try:
             objects = delayedResult.get()
-        except Exception, exc:
+        except Exception as exc:
             dlg = wx.MessageDialog(self, "Result for job %s raised exception: %s" % (jobID, exc),
                                'Processing Error',
                                wx.OK | wx.ICON_ERROR
@@ -1420,8 +1528,15 @@ class SlideCrop(wx.Frame):
             dlg.ShowModal()
             dlg.Destroy()
             return
+
+
+        # Output scaling down factor from "Output Scale" Dropdown from "Regions of interest" fold pane
         scalefact = int(self.scaleCombo.GetSelection())
+
+        # Output Scaling factor (i.e. ratio between selected scale and image used in display GUI (reslevel = 5))
         outputScale = self._getOutputScale(scalefact)
+
+        #scaling for display (using default resLevel = 0)
         displayScale = self._getOutputScale()
         self.roi_definition(objects,scalefact,outputScale,displayScale)
         #this loop populates the table
@@ -1436,7 +1551,9 @@ class SlideCrop(wx.Frame):
 ##            self.list.SetStringItem(index, 2, wval)
 ##            self.list.SetStringItem(index, 3, hval)            
 ##            self.list.SetItemData(index, idx)
-        
+
+        #  iterate throw DrawingObjects (generally the RectDrawingObjects
+        # Add each object to the table in "Regions of interest" of GUI
         for obj in self.contents:
             key = self.contents.index(obj)
             self._addItemToList(obj,key,scalefact)
@@ -1446,15 +1563,22 @@ class SlideCrop(wx.Frame):
         self.abortCrop.Enable(True)
         self.thresh.SetValue(0)
         self.threshold = 255
+
+        # Configure Gui Display Image with current Channel Index and Colour weightings
         try:
             colour = flouroColors[self.curChannelName]
         except:
             colour = 'grey'        
         self.RetrieveImage(self.curChannelIdx,colour)
-        
+
+    """
+    Creates and adds each of the objects into the canvas and ROI table
+    """
     def roi_definition(self,objects,scalefact,outputScale,displayScale):
 
 ##        roiDisplayArray = []
+        ## Ordered list of tuples for rectangles around each of the input objects
+        ##  Tuple in form (columnStart,rowStart,width, height)
         sortedROIList = []
         roiOutputArray = []
         for idx in range(len(objects)-1):
@@ -1489,6 +1613,7 @@ class SlideCrop(wx.Frame):
             if (colstart < 0):
                 colstart = 0
 
+            #Account for rounding error in integers
             if (rowend > self.displayData.GetHeight()):
                 rowend = self.displayData.GetHeight() - 1
             if (colend > self.displayData.GetWidth()):
@@ -1503,6 +1628,7 @@ class SlideCrop(wx.Frame):
             newObject = RectDrawingObject(penColour=self.penColour,
                                     fillColour=self.fillColour,
                                     lineSize=self.lineSize)
+            #updates and adds the RectDrawingObject to the canvas
             self._updateObj(newObject,[roi[0],roi[1],roi[2],roi[3]])
             self.addObject(newObject)          
 ##
@@ -1912,23 +2038,37 @@ class SlideCrop(wx.Frame):
 
         dc.EndDrawing()
 
+    """
+    Add obj to Table in "Regions of interest" pane of gui
+    """
     def _addItemToList(self, obj, key, scalefact=0):
         data = []
         displayScale = self.scale
         slideScale = self._getOutputScale(scalefact)
+
+        #get obj data in order specified in ROI table
         data[0:1] = obj.position
         data[2:3] = obj.size
+
+        # Convert pixel coordinates and lengths relative to display image
         data[0] = int((data[0] / displayScale)*slideScale[0])
         data[1] = int((data[1] / displayScale)*slideScale[1])
         data[2] = int((data[2] / displayScale)*slideScale[0])
         data[3] = int((data[3] / displayScale)*slideScale[1])
+
+        # Get final index to insert row
         index = self.list.InsertStringItem(sys.maxint, str(data[0]))
+
+        # insert above obj data into row at index
         self.list.SetStringItem(index, 1, str(data[1]))
         self.list.SetStringItem(index, 2, str(data[2]))
         self.list.SetStringItem(index, 3, str(data[3]))            
         self.list.SetItemData(index, key)
 
-
+    """
+    Return a tuple of two ratios, (Xratio, Yratio) where both ratios are from scaleFact's resLevel /resLevel. 
+    Xratio, Yratio imply outputScale is greater than resLevel5
+    """
     def _getOutputScale(self,scalefact=0):
         loRes = self.sizeArray[5]
         loResX = loRes[0]
@@ -1939,6 +2079,12 @@ class SlideCrop(wx.Frame):
         outputScale = [(hiResX / loResX),(hiResY / loResY)]
         return outputScale
 
+
+    """
+    Given a DrawingObject (usually a RectDrawingObject), method results in that obj being placed
+     at the position and size specified in ROI 
+     ROI format is (x,y, width, height) where Point(x,y) is the top left vertex. 
+    """
     def _updateObj(self,obj,ROI):
         x = ROI[0]*self.scale
         y = ROI[1]*self.scale
@@ -1948,6 +2094,9 @@ class SlideCrop(wx.Frame):
         obj.setPosition(wx.Point(x,y))
         obj.setSize(wx.Size(width,height))        
 
+    """
+    Switch the Control state of the Gui where state is a boolean of whether the GUI should be enabled. 
+    """
     def _switchControlState(self,state=True):
         self.fbb.Enable(state)
         self.fbText.Enable(state)

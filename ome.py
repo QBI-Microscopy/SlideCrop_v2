@@ -54,7 +54,7 @@ class FileSizeError(Exception):
         return repr(self.value)  
 
 """
-validates a given xml (presumably OME metadata) through the given XSD (XML Schema Definition) of OME. 
+Validates a given xml (presumably OME metadata) through the given XSD (XML Schema Definition) of OME. 
 """
 def validate_xml(xml):
 
@@ -325,8 +325,7 @@ class OMEBase:
 
         s = None
         for (detector, fn, uuid, res), tif_gen in self.tif_images.items():
-            xml= ome.OME(ATTR('xsi','schemaLocation',"%s %s/ome.xsd" % ((namespace_map['ome'],)*2)),
-                          UUID = uuid)
+            xml= ome.OME(ATTR('xsi','schemaLocation',"%s %s/ome.xsd" % ((namespace_map['ome'],)*2)), UUID = uuid)
             for item in template_xml:
 
                 if item.tag.endswith('Image') and item.get('ID')!='Image:%s' % (detector):

@@ -109,7 +109,7 @@ class SlideImage:
             respath = '/DataSet/ResolutionLevel ' + str(selectedRes) + '/'
             imrespath = respath + 'TimePoint 0' + '/' + 'Channel ' + str(channelNum)
 #            self.imarray = np.zeros((imSize[1],imSize[0],1))
-            self.imarray = np.zeros((regionH,regionW,1),dtype=im_dtype)
+            self.imarray = np.zeros((int(regionH),int(regionW),1),dtype=im_dtype)
             pathToData = self.infile[imrespath]
             data = pathToData["Data"]
             if region:
@@ -152,7 +152,7 @@ class SlideImage:
 
 
     """
-    returns the number of channels in the .IMS file. Specifically for level 0 but should be consistent.
+    Returns the number of channels in the .IMS file. Specifically for level 0 but should be consistent.
     """
     def channels(self):
         self.numChannels = len(self.infile['/DataSet/ResolutionLevel 0/TimePoint 0/'])                 
@@ -360,3 +360,12 @@ def list2str(inputarray):
         str_list.append(inputarray[iExt])
         
     return ''.join(str_list)
+
+FILENAME = "C:/Users/uqjeadi2/Downloads/NG_GAD67_GFP16-B.ims"
+def testing_function():
+    testImage = SlideImage(FILENAME)
+    print(testImage.datasetinfo_image())
+
+if __name__ == '__main__':
+    testing_function()
+
