@@ -1662,24 +1662,34 @@ class SlideCrop(wx.Frame):
     # ==================================
     
     def OnCrop(self,event):
+
+        #  Disable all GUI Buttons
         self._switchControlState(False)
         self.procAbortButton.Enable(False)
         selection = []
         roiArray = []
+
+        #  Iterate Through ROI from self.list and iff checked append
         for index in range(self.list.GetItemCount()):
             if self.list.IsChecked(index):
                 selection.append(index)
                 itemArray = []
+
+                #  Append [x,y, Width, Height] of ROI to roiArray
                 for col in range(4):
                     item = self.list.GetItem(index,col)
                     itemArray.append(int(item.GetText()))
                 roiArray.append(itemArray)
+
+        #If more than one Image Segment
         if len(roiArray) > 1:
             dlg = wx.ProgressDialog("Writing tissue sections",
                             "Please wait",
                             maximum = len(selection)-1,
                             parent=self,
                             style = wx.PD_CAN_ABORT | wx.PD_APP_MODAL | wx.PD_ELAPSED_TIME)
+
+            #  Run createOutput with [selection,roiArray,dlg/None] and input result to finishedCrop afterwards.
             delayedresult.startWorker(self.finishedCrop, self.createOutput,wargs=[selection,roiArray,dlg])
         else:
             delayedresult.startWorker(self.finishedCrop, self.createOutput,wargs=[selection,roiArray])
@@ -1698,13 +1708,25 @@ class SlideCrop(wx.Frame):
 
     def OnAbortCrop(self,event):
         self.shouldAbort = True
-        
+
+
+    """
+    Create Outputs from the selected ROI from OnCrop()
+    """
     def createOutput(self,selection,roiArray,dlg=None):
+
+        #  Get "Output Scale", "Compression" and "All Channels" from "Regions of interest" GUI Panel
         scalefact = int(self.scaleCombo.GetSelection())
         outChanChoice = (self.radio1.GetValue())
         compression = self.comprCombo.GetValue()
+
+        #  If radio button selects "All channels" find range from Imaris File.
         if outChanChoice:
             outChan = range(self.numchannels)
+
+        #  If channels are specified, subSearch the text input to get channels.
+        #       1-3 = 1,2,3
+        #       1,3,5 = 1,3,5
         else:
             outChanString = self.chans.GetValue()
             if outChanString.find(',') == 1:
@@ -1716,9 +1738,12 @@ class SlideCrop(wx.Frame):
             else:
                 outChan = []
                 outChan.append(int(self.chans.GetValue())-1)
-                
+
+
         rotation = 0#int(self.rotationCombo.GetSelection()) 
         total = len(roiArray) - 1
+
+        # Iterate through ROI
         for idx in range(len(roiArray)):
             if len(roiArray) > 1:
                 wx.CallAfter(dlg.Update,idx)
@@ -1729,15 +1754,17 @@ class SlideCrop(wx.Frame):
             rowend = roi[1]+roi[3]
             colstart = roi[0]
             colend = roi[0]+roi[2]
+
+            #  Specify ROI boundaries
             pixelregion = [rowstart,rowend,colstart,colend]
-            #outputFileChoice = self.radio_btn_OME.GetValue()
             outputFileChoice = 1
             inpath = self.selectedFile[0]
             infname = inpath[0:-4]
             if (len(self.userDetails)==4) and (self.userDetails[0]==''):
                 self.userDetails = []
                 print(self.userDetails)
-                
+
+            #  Create output File name
             if outputFileChoice:
                 if (idx + 1) < 10:
                     if len(outChan) == 1:
@@ -1749,6 +1776,8 @@ class SlideCrop(wx.Frame):
                     outfilename = infname + '_' + 'section_0' + str(idx + 1) + '.ome.tif'
                     
                 OMETIFF(self.userDetails, self.infilename, outfilename, compression, str((idx+1)), total, self.ImarisInput, pixelregion,outChan,scalefact,rotation).process()
+
+            #  Other
             else:
                 if (idx + 1) < 10:
                     outfilenameImaris = infname + '_' + 'section_00' + str(idx + 1) + '.ims'
@@ -1759,6 +1788,9 @@ class SlideCrop(wx.Frame):
             wx.CallAfter(dlg.Destroy)
 #        imarray = None
 
+    """
+    Enable GUI functionality after crop has finished. 
+    """
     def finishedCrop(self,result):
         #try:
         r = result.get()

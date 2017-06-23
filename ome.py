@@ -5,7 +5,7 @@ from lxml import etree
 from lxml.builder import ElementMaker
 from tifffile import *
 # try:
-#     from libtiff import TIFF
+from PyLibTiff import *
 # except:
 #     import traceback
 #     traceback.print_exc()
@@ -177,7 +177,7 @@ class TiffImageGenerator:
 
 
     """
-    
+    Creates a .TIFF image from the input variables and returns the tile count of the generated .TIFF 
     """
     def create_tiles(self,roi,sizeX, sizeY, sizeZ, sizeC, sizeT, tileWidth, tileHeight, description):
         tif_image = TIFF.open(self.filename, 'w')
