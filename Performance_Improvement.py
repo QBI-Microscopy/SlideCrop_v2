@@ -11,12 +11,19 @@ General Page to store Ideas and methods to improve performance of SlideCrop back
 Main Problem is the cropping of all planes after segmentation
 .IMS file has high degree of subdividing image data (files for each channel, resolution and timepoint
 chunking to include ndarray of (time, channel, x,y,z) could improve read and crop performance
+Chunking can improve data read costs by storing data in (xsize, ysize, zsize) chunks
+Must consider chunk cache when designing chunk params as to allow chunks to be effective. 
+
 General case for .IMS is that z and time dimensions are only 1 and 3 channels
 Alot of ram access between for tiff files and storing alot of the datasets on RAM
 
 
-
 """
+
+#  TODO: Test time requirements to transform .ims file to (x,y,c) data set arrays to improve performance
+#  TODO: Work on compression ideas and operating on compressed h5py files
+
+
 FILEPATH = "C:/Users/uqjeadi2/Downloads/NG_GAD67_GFP16-B.ims"
 
 def import_hdf_File():
