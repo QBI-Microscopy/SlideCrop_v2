@@ -5,7 +5,7 @@ from lxml import etree
 from lxml.builder import ElementMaker
 from tifffile import *
 # try:
-from PyLibTiff import *
+from libtiff import *
 # except:
 #     import traceback
 #     traceback.print_exc()
