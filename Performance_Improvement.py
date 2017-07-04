@@ -18,6 +18,11 @@ Must consider chunk cache when designing chunk params as to allow chunks to be e
 General case for .IMS is that z and time dimensions are only 1 and 3 channels
 Alot of ram access between for tiff files and storing alot of the datasets on RAM
 
+- Check whether .IMS -> .hdf uses the one image array for different paths (i.e multichannel image with separate paths
+  to each channel, analagous for time component)
+
+- h5py (and assumably hdf) can use compression filters but de/compression is performed automatically on I/O read/write 
+  making there no RAM benefits from this action. Tradeoff is solely Disk Storage <-> I/O R/W speed (from primitive testing 8 times slowing reading in file)
 
 """
 

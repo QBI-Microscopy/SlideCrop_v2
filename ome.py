@@ -11,6 +11,7 @@ from libtiff import *
 #     traceback.print_exc()
 #     #raw_input('enter to close')
 import numpy as np
+import bioformats
 
 
 """

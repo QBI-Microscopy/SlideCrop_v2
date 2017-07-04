@@ -49,20 +49,21 @@ def compress_file(res_Levels, out_path):
         #  with reslevel_data, on each iteration open the output hdf5 and store the reslevel as its own reslevel dataset,
         #  then close to save RAM.
         file.close();
+
         out_file = h5py.File(out_path)
-        out_file.create_dataset("Resolution_Level_" + str(resLev), data=resLev_data)
+        out_file.create_dataset("Resolution_Level_" + str(resLev), data=resLev_data) # , compression="gzip", compression_opts=9)
         out_file.close()
-        file = import_hdf_File()
+
 
 def run_compress_file():
     result_dict = {}
-    testing_array = [[7],[6,7],[5,6,7],[4,5,6,7],[3,4,5,6,7],[2,3,4,5,6,7],[1,2,3,4,5,6,7]] # ,[0,1,2,3,4,5,6,7]]
+    testing_array =  [[7],[6,7],[5,6,7],[4,5,6,7],[3,4,5,6,7],[2,3,4,5,6,7],[1,2,3,4,5,6,7]] # ,[0,1,2,3,4,5,6,7]]
     for res_Levels in testing_array:
-        output = OUTPUTPATH + str(res_Levels[0]) + ".hdf"
+        output = OUTPUTPATH + str(res_Levels) + ".hdf"
 
         result = T.Timer(lambda: compress_file(res_Levels, output)).timeit(1)
         print(str(res_Levels) + ": " + str(result))
-        result_dict[res_Levels] = (result)
+        result_dict[str(res_Levels)] = (result)
     return result_dict
 """
     Results from compress_file are as followed (individual file times are difference in arrayed resolutions): 
@@ -74,6 +75,25 @@ def run_compress_file():
     2-7: 30.00      2: 22.42
     1-7: 156.47     1: 126.47
     0-7:  not enough memory to test 0-7 or even just 0
+"""
+
+"""
+    [7]: 0.027910292211821147
+    [6]: 0.20617825676834384
+    [5]: 0.6967104594085974
+    [4]: 2.275472083643173
+    [3]: 7.130865532552523
+    [2]: 25.805064140303475
+    [1]: 121.89846947772466
+"""
+"""
+    [7]: 0.025695308133768618
+    [6, 7]: 0.09464625099483015
+    [5, 6, 7]: 0.3888985819063605
+    [4, 5, 6, 7]: 1.7836597806848535
+    [3, 4, 5, 6, 7]: 8.060953114926324
+    [2, 3, 4, 5, 6, 7]: 33.40561499396804
+    [1, 2, 3, 4, 5, 6, 7]: 157.36506977573052
 """
 
 """
