@@ -1,8 +1,10 @@
 import h5py
 import numpy as np
 import timeit as T
+import random
+
 FILEPATH = "C:/Users/uqjeadi2/Downloads/NG_GAD67_GFP16-B.ims"
-OUTPUTPATH = "C:/Users/uqjeadi2/Downloads/"
+OUTPUTPATH = "E:/"
 def import_hdf_File():
     return h5py.File(FILEPATH)
 
@@ -49,17 +51,19 @@ def compress_file(res_Levels, out_path):
         #  with reslevel_data, on each iteration open the output hdf5 and store the reslevel as its own reslevel dataset,
         #  then close to save RAM.
         file.close();
+        out_file = h5py.File(out_path + str(random.getrandbits(10)) + ".hdf")
+        out_file.create_dataset("resolution_level_" + str(resLev), data=resLev_data) # , compression="gzip", compression_opts=9)
+        resLev_data = []
+        time_data = []
 
-        out_file = h5py.File(out_path)
-        out_file.create_dataset("Resolution_Level_" + str(resLev), data=resLev_data) # , compression="gzip", compression_opts=9)
         out_file.close()
 
 
 def run_compress_file():
     result_dict = {}
-    testing_array =  [[7],[6,7],[5,6,7],[4,5,6,7],[3,4,5,6,7],[2,3,4,5,6,7],[1,2,3,4,5,6,7]] # ,[0,1,2,3,4,5,6,7]]
+    testing_array =  [[7],[6,7],[5,6,7],[4,5,6,7],[3,4,5,6,7],[2,3,4,5,6,7]]#,[1,2,3,4,5,6,7]] # ,[0,1,2,3,4,5,6,7]]
     for res_Levels in testing_array:
-        output = OUTPUTPATH + str(res_Levels) + ".hdf"
+        output = OUTPUTPATH + str(res_Levels) + "hdf"
 
         result = T.Timer(lambda: compress_file(res_Levels, output)).timeit(1)
         print(str(res_Levels) + ": " + str(result))
@@ -107,6 +111,28 @@ def run_compress_file():
     | 1000  |     774.7     |790.15 |  * 1000 times the time for 100 iterations
 
 """
+
+"""
+
+New Times with memory erasing lines in (reinstantiating lists to empty lists)
+
+[7]: 0.08187914203101923
+[6, 7]: 0.23220891837650576
+[5, 6, 7]: 0.6880336298163721
+[4, 5, 6, 7]: 1.8122360133123465
+[3, 4, 5, 6, 7]: 5.393509158069653
+[2, 3, 4, 5, 6, 7]: 19.16229577332063
+[1, 2, 3, 4, 5, 6, 7]: 87.89015727938481
+"""
+
+"""
+Testing with and without Ram improvements (as above) in batch averages of three 
+
+|        Set        | Without |  With  | With and Compressed | 
+|[2, 3, 4, 5, 6, 7] | 38.19   | 15.77  | 
+
+"""
+
 
 """
 Clearly Reconfiguring the file in this fashion is unusable for two reasons. Firstly, this operation for cannot
