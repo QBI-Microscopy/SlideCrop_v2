@@ -1,0 +1,71 @@
+"""
+    Script to compare and test the memory and time efficiency of the low and high APIs for HDF and h5py. Following
+    features are tested as they are the most common use in SlideCropper:
+        - Opening, loading and closing files from Disk
+        - Opening subslices into RAM and manipulating datasets
+        - Creating new HDF and TIFF files, filling datasets from .IMS files
+        - Iterating through file groups and performing operations on the data.
+"""
+
+import h5py
+import numpy as np
+import random
+import memory_profiler
+
+FILEDIRECTORY = "C:/Users/Jack Eadie/Documents/GitHub/SlideCrop/"
+
+@profile
+def opening_and_creating_files():
+    # Open existing File
+
+
+    # Save into new directory
+    #Close First
+    #Close Second
+    pass
+
+def create_dataset():
+    # Create standard, random dataset
+    # float dataset
+    # Create Standard, 2+D dataset
+
+    #Create New Group
+    # chunked dataset
+
+    #Create Nested Group
+    # Resizeable Dataset
+    # Compressed Dataset
+    pass
+
+def slicing_and_operating_datasets():
+    #Slicing 1D data
+
+    #Slicing 2+D dataset
+
+    # Slicing chunked Data
+
+    #Slicing compressed Data
+
+    #Resizing datasets
+    pass
+
+def tiff_and_ims_operations():
+    pass
+
+def groups_iteration():
+    pass
+
+
+
+@profile
+def my_func():
+    a = h5py.File(FILEDIRECTORY + str(random.getrandbits(10))+ "hdf5")
+
+
+
+if __name__ == '__main__':
+    opening_and_creating_files()
+    create_dataset()
+    slicing_and_operating_datasets()
+    tiff_and_ims_operations()
+    groups_iteration()
