@@ -3,7 +3,6 @@ import numpy as np
 from ome import ome, OMEBase
 import os
 from slide_metadata import SlideImage
-
 groups = dict(
     QBIgroup=dict(name='QBIgroup', contact_id='QBIuser'))
 people = dict(
@@ -11,8 +10,6 @@ people = dict(
                  email='QBIuser@uq.edu.au', user_name='QBIuser',
                  institution='Queensland Brain Institute', groups='QBIgroup')
 )
-
-
 class FileSizeError(Exception):
     """
     Error SubClass for file size errors (i.e. dimensions etc)
