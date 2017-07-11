@@ -12,16 +12,24 @@ import numpy as np
 import random
 import memory_profiler
 
-FILEDIRECTORY = "C:/Users/Jack Eadie/Documents/GitHub/SlideCrop/"
+FILEDIRECTORY = "E:/"
+MAINFILEPATH = FILEDIRECTORY + "trial.hdf"
+EXISTING_FILE = "C:/Users/uqjeadi2/Downloads/NG_GAD67_GFP16-B.ims"
 
 @profile
 def opening_and_creating_files():
     # Open existing File
+    exisiting_file = h5py.File(EXISTING_FILE)
 
 
     # Save into new directory
+    exisiting_file.copy(exisiting_file, MAINFILEPATH)
+    new_file = h5py.File(MAINFILEPATH)
+
     #Close First
+    new_file.close()
     #Close Second
+    exisiting_file.close()
     pass
 
 def create_dataset():
@@ -37,6 +45,7 @@ def create_dataset():
     # Compressed Dataset
     pass
 
+#  Typical operations when performing analysis of IMS file on SlideCrop
 def slicing_and_operating_datasets():
     #Slicing 1D data
 
@@ -49,13 +58,17 @@ def slicing_and_operating_datasets():
     #Resizing datasets
     pass
 
+#  Typical operations for saving and sending data into .tiff file formats
 def tiff_and_ims_operations():
     pass
 
+#  Typical operations when iterating over grouped datasets in IMS
 def groups_iteration():
     pass
 
-
+# Typical operations when cropping in SlideCrop application
+def cropping_IMS_to_hdf():
+    pass
 
 @profile
 def my_func():
@@ -69,3 +82,4 @@ if __name__ == '__main__':
     slicing_and_operating_datasets()
     tiff_and_ims_operations()
     groups_iteration()
+    cropping_IMS_to_hdf()
