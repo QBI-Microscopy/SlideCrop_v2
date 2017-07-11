@@ -21,7 +21,6 @@ def opening_and_creating_files():
     # Open existing File
     exisiting_file = h5py.File(EXISTING_FILE)
 
-
     # Save into new directory
     exisiting_file.copy(exisiting_file, MAINFILEPATH)
     new_file = h5py.File(MAINFILEPATH)
@@ -30,15 +29,23 @@ def opening_and_creating_files():
     new_file.close()
     #Close Second
     exisiting_file.close()
-    pass
 
 def create_dataset():
+    file = h5py.File(FILEDIRECTORY + "empty" + str(random.getrandbits(10)) + ".hdf")
+
     # Create standard, random dataset
+    r_set  = np.random.randint(0, 1000, size=(100,100, 100), dtype='u')
+    file.create_dataset("standard", (100, 100, 100), dtype = 'u', data = r_set)
+
     # float dataset
-    # Create Standard, 2+D dataset
+    f_set = np.random.rand(100, 100, 100)
+    file.create_dataset("float", (100, 100, 100), dtype='f', data=f_set)
 
     #Create New Group
+    file.create_group("subgroup")
     # chunked dataset
+    c_set = np.random.randint(0, 1000, size=(100,100, 100), dtype='u')
+    file.get("subgroup").create_dataset("chunked", (100,100,100), dtype='u', data= c_set, chunks=(10,10,10))
 
     #Create Nested Group
     # Resizeable Dataset
