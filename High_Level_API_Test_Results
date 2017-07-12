@@ -1,0 +1,33 @@
+function create_dataset() Results
+    Time: 32.9 for 5 trials
+            3.03s
+
+    Memory, adjusted for @profile:
+
+Line #    Mem usage    Increment   Line Contents
+================================================
+    37     57.7 MiB      0.0 MiB   @profile
+    38                             def create_dataset():
+    39     58.2 MiB      0.5 MiB       file = h5py.File(USED_PATH + str(random.getrandbits(8)) + ".hdf")
+    40
+    41                                 # Create standard, random dataset
+    42     88.8 MiB     30.5 MiB       r_set  = np.random.randint(0, 1000, size=(200,200, 200), dtype='i')
+    43     88.8 MiB      0.0 MiB       file.create_dataset("standard", (200,200, 200), dtype = 'i', data = r_set)
+    44
+    45                                 # float dataset
+    46    149.8 MiB     61.0 MiB       f_set = np.random.rand(200,200, 200)
+    47    149.8 MiB      0.0 MiB       file.create_dataset("float", (200,200, 200), dtype='f', data=f_set)
+    48
+    49                                 #Create New Group
+    50    149.8 MiB      0.0 MiB       sub = file.create_group("subgroup")
+    51                                 # chunked dataset
+    52    180.3 MiB     30.5 MiB       c_set = np.random.randint(0, 1000, size=(200,200, 200), dtype='i')
+    53    182.9 MiB      2.5 MiB       sub.create_dataset("chunked", (200,200, 200), dtype='i', data= c_set, chunks=(10,10,10))
+    54
+    55                                 #Create Nested Group
+    56    182.9 MiB      0.0 MiB       nest = sub.create_group("nested")
+    57
+    58                                 # Compressed Dataset
+    59    182.9 MiB      0.1 MiB       nest.create_dataset("compressed", (200,200, 200), dtype= 'i', data= r_set, compression="gzip", compression_opts=9)
+
+    - Average Net Memory of 10 iterations: 182.6 MiB (191.5 MB)
