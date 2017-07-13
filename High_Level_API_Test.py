@@ -19,7 +19,7 @@ FILEDIRECTORY = "E:/"
 MAINFILEPATH = FILEDIRECTORY + "trial.hdf"
 EXISTING_FILE = "E:/NG_GAD67_GFP16-B.ims"
 USED_PATH = FILEDIRECTORY + "empty" + str(random.getrandbits(10)) # + ".hdf"
-
+OPER_PATH = FILEDIRECTORY + "empty401235.hdf"
 @profile
 def opening_and_creating_files():
     # Open existing File
@@ -35,58 +35,58 @@ def opening_and_creating_files():
     exisiting_file.close()
 
 @profile
-def create_dataset():
+def create_dataset(size):
     file = h5py.File(USED_PATH + str(random.getrandbits(8)) + ".hdf")
 
     # Create standard, random dataset
-    r_set  = np.random.randint(0, 1000, size=(200,200, 200), dtype='i')
-    file.create_dataset("standard", (200,200, 200), dtype = 'i', data = r_set)
+    r_set  = np.random.randint(0, 1000, size=(size,size, size), dtype='i')
+    file.create_dataset("standard", (size,size, size), dtype = 'i', data = r_set)
 
     # float dataset
-    f_set = np.random.rand(200,200, 200)
-    file.create_dataset("float", (200,200, 200), dtype='f', data=f_set)
+    f_set = np.random.rand(size,size, size)
+    file.create_dataset("float", (size,size, size), dtype='f', data=f_set)
 
     #Create New Group
     sub = file.create_group("subgroup")
     # chunked dataset
-    c_set = np.random.randint(0, 1000, size=(200,200, 200), dtype='i')
-    sub.create_dataset("chunked", (200,200, 200), dtype='i', data= c_set, chunks=(10,10,10))
+    c_set = np.random.randint(0, 1000, size=(size,size, size), dtype='i')
+    sub.create_dataset("chunked", (size,size, size), dtype='i', data= c_set, chunks=(10,10,10))
 
     #Create Nested Group
     nest = sub.create_group("nested")
 
     # Compressed Dataset
-    nest.create_dataset("compressed", (200,200, 200), dtype= 'i', data= r_set, compression="gzip", compression_opts=9)
+    nest.create_dataset("compressed", (size,size, size), dtype= 'i', data= r_set, compression="gzip", compression_opts=9)
 
 
 #  Typical operations when performing analysis of IMS file on SlideCrop
 @profile
-def slicing_and_operating_datasets():
-    file = h5py.File(USED_PATH)
+def slicing_and_operating_datasets(PATH):
+    file = h5py.File(PATH)
 
     #Slicing sequential data
     r_set= file.get("standard")
     slicer1 = r_set[0,0,:]
     slicer2 = r_set[0,:,0]
     slicer3 = r_set[:,0,0]
-    slicer4 = r_set[[1,2],1:4,1:4]
-    slicer5 = r_set[1:4,1:4, [1,2]]
+    slicer4 = r_set[:,1:4,1:4]
+    slicer5 = r_set[1:4,1:4, :]
 
     # Slicing compressed Data
     c_set = file.get("subgroup/nested/compressed")
     slicec1 = c_set[0, 0, :]
     slicec2 = c_set[0, :, 0]
     slicec3 = c_set[:, 0, 0]
-    slicec4 = c_set[[1, 2], 1:4, 1:4]
-    slicec5 = c_set[1:4, 1:4, [1, 2]]
+    slicec4 = c_set[:, 1:4, 1:4]
+    slicec5 = c_set[1:4, 1:4, :]
 
     #Slicing chunked Data
     ch_set = file.get("subgroup/chunked")
     slicech1 = ch_set[0, 0, :]
     slicech2 = ch_set[0, :, 0]
     slicech3 = ch_set[:, 0, 0]
-    slicech4 = ch_set[[1, 2], 1:4, 1:4]
-    slicech5 = ch_set[1:4, 1:4, [1, 2]]
+    slicech4 = ch_set[:, 1:4, 1:4]
+    slicech5 = ch_set[1:4, 1:4, :]
 
 
 #  Typical operations for saving and sending data into .tiff file formats
