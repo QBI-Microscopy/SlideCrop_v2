@@ -1,7 +1,7 @@
 function create_dataset() Results
        - Used with params, size= 400
 
-    Memory, adjusted for @profile:
+    Memory
 
     Line #    Mem usage    Increment   Line Contents
     ================================================
@@ -95,34 +95,34 @@ Function: slicing_and_operating_datasets()
 
     Memory:
         Line #    Mem usage    Increment   Line Contents
-        ================================================
-            63     58.0 MiB      0.0 MiB   @profile
-            64                             def slicing_and_operating_datasets(PATH):
-            65     58.6 MiB      0.6 MiB       file = h5py.File(PATH, "r+")
-            66
-            67                                 #Slicing sequential data
-            68     58.8 MiB      0.2 MiB       r_set= file.get("standard")
-            69     59.0 MiB      0.1 MiB       slicer1 = r_set[0,0,:]
-            70     59.0 MiB      0.0 MiB       slicer2 = r_set[0,:,0]
-            71     59.1 MiB      0.1 MiB       slicer3 = r_set[:,0,0]
-            72     59.6 MiB      0.6 MiB       slicer4 = r_set[:,1:20,1:20]
-            73     60.2 MiB      0.6 MiB       slicer5 = r_set[1:20,1:20, :]
-            74
-            75                                 # Slicing compressed Data
-            76     60.2 MiB      0.0 MiB       c_set = file.get("subgroup/nested/compressed")
-            77     61.6 MiB      1.4 MiB       slicec1 = c_set[0, 0, :]
-            78     62.3 MiB      0.8 MiB       slicec2 = c_set[0, :, 0]
-            79     62.7 MiB      0.3 MiB       slicec3 = c_set[:, 0, 0]
-            80     63.4 MiB      0.7 MiB       slicec4 = c_set[:, 1:20, 1:20]
-            81     64.0 MiB      0.6 MiB       slicec5 = c_set[1:20, 1:20, :]
-            82
-            83                                 #Slicing chunked Data
-            84     64.0 MiB      0.0 MiB       ch_set = file.get("subgroup/chunked")
-            85     64.0 MiB      0.0 MiB       slicech1 = ch_set[0, 0, :]
-            86     64.3 MiB      0.3 MiB       slicech2 = ch_set[0, :, 0]
-            87     65.5 MiB      1.2 MiB       slicech3 = ch_set[:, 0, 0]
-            88     67.6 MiB      2.1 MiB       slicech4 = ch_set[:, 1:20, 1:20]
-            89     68.3 MiB      0.7 MiB       slicech5 = ch_set[1:20, 1:20, :]
+    ================================================
+            65     50.1 MiB      0.0 MiB   @profile
+            66                             def slicing_and_operating_datasets(PATH):
+            67     50.8 MiB      0.7 MiB       file = h5py.File(PATH, "r+")
+            68
+            69                                 #Slicing sequential data
+            70     51.0 MiB      0.2 MiB       r_set= file.get("standard")
+            71     51.2 MiB      0.2 MiB       slicer1 = r_set[0,0,:]
+            72     51.2 MiB      0.0 MiB       slicer2 = r_set[0,:,0]
+            73     51.2 MiB      0.0 MiB       slicer3 = r_set[:,0,0]
+            74     51.4 MiB      0.3 MiB       slicer4 = r_set[:,1:20,1:20]
+            75     51.7 MiB      0.3 MiB       slicer5 = r_set[1:20,1:20, :]
+            76
+            77                                 # Slicing compressed Data
+            78     51.7 MiB      0.0 MiB       c_set = file.get("subgroup/nested/compressed")
+            79     51.8 MiB      0.1 MiB       slicec1 = c_set[0, 0, :]
+            80     51.8 MiB      0.0 MiB       slicec2 = c_set[0, :, 0]
+            81     51.8 MiB      0.0 MiB       slicec3 = c_set[:, 0, 0]
+            82     52.1 MiB      0.3 MiB       slicec4 = c_set[:, 1:20, 1:20]
+            83     52.4 MiB      0.3 MiB       slicec5 = c_set[1:20, 1:20, :]
+            84
+            85                                 #Slicing chunked Data
+            86     52.4 MiB      0.0 MiB       ch_set = file.get("subgroup/chunked")
+            87     52.8 MiB      0.4 MiB       slicech1 = ch_set[0, 0, :]
+            88     53.3 MiB      0.6 MiB       slicech2 = ch_set[0, :, 0]
+            89     54.4 MiB      1.1 MiB       slicech3 = ch_set[:, 0, 0]
+            90     56.2 MiB      1.7 MiB       slicech4 = ch_set[:, 1:20, 1:20]
+            91     56.7 MiB      0.5 MiB       slicech5 = ch_set[1:20, 1:20, :]
 
 
     Time:

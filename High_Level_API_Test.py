@@ -20,7 +20,8 @@ MAINFILEPATH = FILEDIRECTORY + "trial.hdf"
 EXISTING_FILE = "E:/NG_GAD67_GFP16-B.ims"
 USED_PATH = FILEDIRECTORY + "empty" + str(random.getrandbits(10)) # + ".hdf"
 OPER_PATH = FILEDIRECTORY + "empty401235.hdf"
-@profile
+
+#@profile
 def opening_and_creating_files():
     # Open existing File
     exisiting_file = h5py.File(EXISTING_FILE)
@@ -38,25 +39,26 @@ def opening_and_creating_files():
 def create_dataset(path, size):
     F = h5py.File(path)
 
+    dims = (size, size, size)
     # Create standard, random dataset
-    r_set  = np.random.randint(0, 1000, size=(size,size, size), dtype='i')
-    F.create_dataset("standard", (size,size, size), dtype = 'i', data = r_set)
+    r_set  = np.random.randint(0, 1000, size=dims, dtype='i')
+    F.create_dataset("standard", dims, dtype = 'i', data = r_set)
 
     # float dataset
     f_set = np.random.rand(size,size, size)
-    F.create_dataset("float", (size,size, size), dtype='f', data=f_set)
+    F.create_dataset("float", dims, dtype='f', data=f_set)
 
     #Create New Group
     sub = F.create_group("subgroup")
     # chunked dataset
-    c_set = np.random.randint(0, 1000, size=(size,size, size), dtype='i')
-    sub.create_dataset("chunked", (size,size, size), dtype='i', data= c_set, chunks=(10,10,10))
+    c_set = np.random.randint(0, 1000, size=dims, dtype='i')
+    sub.create_dataset("chunked", dims, dtype='i', data= c_set, chunks=(10,10,10))
 
     #Create Nested Group
     nest = sub.create_group("nested")
 
     # Compressed Dataset
-    #nest.create_dataset("compressed", (size,size, size), dtype= 'i', data= r_set, compression="gzip", compression_opts=3)
+    #nest.create_dataset("compressed", dims, dtype= 'i', data= r_set, compression="gzip", compression_opts=3)
     F.close()
 
 #  Typical operations when performing analysis of IMS file on SlideCrop
@@ -101,9 +103,18 @@ def groups_iteration():
 def cropping_IMS_to_hdf():
     pass
 
+@profile
+def test(path):
+    file = h5py.File(path)
+    r_set = file.get("standard")
+    r_set_c = r_set[:,:,:]
+    del r_set_c
 
 if __name__ == '__main__':
-    print(str(Timer(lambda: create_dataset("E:/asdsf.hdf", 100)).timeit(1)))
-    # lp= LineProfiler()
-    # lp_wrapper= lp(create_dataset)
-    # lp.print_stats()
+        slicing_and_operating_datasets("E:/lowtesting111.hdf")
+    # p = LineProfiler()
+    # p.add_function(create_dataset)
+    # for i in range(10):
+    #     p.runcall(create_dataset, "E:/testing9" +str(i) + ".hdf", 400)
+    #
+    # p.print_stats()

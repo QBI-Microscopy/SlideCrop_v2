@@ -2,11 +2,14 @@ import h5py
 import numpy as np
 import timeit as T
 import random
+#from line_profiler import *
+from memory_profiler import *
 
-FILEPATH = "C:/Users/uqjeadi2/Downloads/NG_GAD67_GFP16-B.ims"
+
+FILEPATH = "E:/microscope3 - Copy.ims"
 OUTPUTPATH = "E:/"
 def import_hdf_File():
-    return h5py.File(FILEPATH)
+    return h5py.File(FILEPATH, "r+")
 
 
 """
@@ -22,7 +25,7 @@ def import_hdf_File():
     The method below iterates through the desired array of Resolution levels, res_Levels and will create a 4D image to
     add as a dataset to a hdf file that will be saved at out_path path. 
 """
-
+@profile
 def compress_file(res_Levels, out_path):
     for resLev in res_Levels:
         file = import_hdf_File()
@@ -50,7 +53,7 @@ def compress_file(res_Levels, out_path):
 
         #  with reslevel_data, on each iteration open the output hdf5 and store the reslevel as its own reslevel dataset,
         #  then close to save RAM.
-        file.close();
+        file.close()
         out_file = h5py.File(out_path + str(random.getrandbits(10)) + ".hdf")
         out_file.create_dataset("resolution_level_" + str(resLev), data=resLev_data) # , compression="gzip", compression_opts=9)
         resLev_data = []
@@ -69,6 +72,11 @@ def run_compress_file():
         print(str(res_Levels) + ": " + str(result))
         result_dict[str(res_Levels)] = (result)
     return result_dict
+
+
+if __name__ == '__main__':
+    run_compress_file()
+
 """
     Results from compress_file are as followed (individual file times are difference in arrayed resolutions): 
     7 :  0.027      7: 0.027
