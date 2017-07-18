@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+from memory_profiler import *
 
 class SlideImage:
     def __init__(self, filename):
@@ -27,6 +28,7 @@ class SlideImage:
              region: if not None a Region of interest where imarray is the image data for solely that region. 
              region = [top_row_number, bottom_row_number, left_column_number, right_column_number]
     """
+    @profile
     def get_data_in_channel(self, selectedRes, channelNum, region=None):
         # selects resLevel from relevant row of 8x2 np array
         imSize = self.image_size_from_data()[selectedRes]
