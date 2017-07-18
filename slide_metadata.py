@@ -57,7 +57,7 @@ class SlideImage:
         #if region specified fill with Region of interest (size will be compatible due to above
         # region == None -> duplicate whole image
         im_dtype = np.dtype('uint8')
-        self.imarray = np.zeros((1,regionH,regionW),dtype=im_dtype)
+        self.imarray = np.zeros((1,int(regionH),int(regionW)),dtype=im_dtype)
 
         if region:
             try:
@@ -65,7 +65,7 @@ class SlideImage:
             except:
                 return self.imarray
         else:
-            self.imarray[0:,:] = data[0,:,:]            
+            self.imarray[0,:,:] = data[0, :,:]
         return self.imarray  
 
 
@@ -175,7 +175,7 @@ class SlideImage:
             pathToData = self.infile[path]
             data = pathToData["Data"]
             #  add dimensions to specified resLevel Row
-            imSizeArrayFromData[r,0]= data.shape[2]
+            imSizeArrayFromData[r,0]= data.shape[0]
             imSizeArrayFromData[r,1]= data.shape[1]
         return imSizeArrayFromData
 

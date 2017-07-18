@@ -10,7 +10,9 @@ def create_mock_ims_file(OutPath, size, pixels):
     :return: null
     """
     file = h5py.File(OutPath)
-    image = np.random.randint(0, 255, (pixels, pixels))
+    image = np.random.randint(0, 255, (1, pixels, pixels))
+    info = file.create_group("DataSetInfo")
+    info.create_group("Image")
     dataset = file.create_group("DataSet")
     resLev, Time, Channel = size
     for r in range(resLev):
@@ -19,10 +21,10 @@ def create_mock_ims_file(OutPath, size, pixels):
             t_group = r_group.create_group("TimePoint " + str(t))
             for c in range(Channel):
                 c_group = t_group.create_group("Channel " + str(c))
-                data = im.zoom(image, (1-r/resLev))
-                c_group.create_dataset("Data", data.shape, data=data)
+                data = im.zoom(image, (1,(1-r/resLev), (1-r/resLev)))
+                c_group.create_dataset("Data", data.shape, data=data, dtype=np.dtype('uint8'))
                 del data
     file.close()
 
 if __name__ == '__main__':
-    create_mock_ims_file("E:/mockfunction.hdf",[2,2,1] ,200)
+    create_mock_ims_file("E:/bigfile4.hdf",[7,2,1] ,500)

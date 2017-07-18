@@ -6,8 +6,7 @@ import random
 from memory_profiler import *
 
 
-FILEPATH = "E:/microscope3 - Copy.ims"
-OUTPUTPATH = "E:/"
+FILEPATH = "E:/mockfunction.hdf"
 def import_hdf_File():
     return h5py.File(FILEPATH, "r+")
 
@@ -26,9 +25,9 @@ def import_hdf_File():
     add as a dataset to a hdf file that will be saved at out_path path. 
 """
 @profile
-def compress_file(res_Levels, out_path):
+def compress_file(res_Levels, out_path, filepath):
     for resLev in res_Levels:
-        file = import_hdf_File()
+        file = h5py.File(filepath, "r+")
         for timepoint in range(len(file["DataSet/ResolutionLevel " + str(resLev)])):
             for channel in range(
                     len(file["DataSet/ResolutionLevel " + str(resLev) + "/TimePoint " + str(timepoint) + "/"])):
@@ -42,19 +41,21 @@ def compress_file(res_Levels, out_path):
                     time_data = file[channel_data_path]
                 #  else simply add this channel as another plane in time_data
                 else:
-                    time_data = np.concatenate((time_data, file[channel_data_path]), 0)
+
+                    time_data = np.dstack((time_data, file[channel_data_path]))
 
             # first timepoint (timepoint ==0) make this resolution's data equal to the data image at timepoint0
             if not timepoint:
                 resLev_data = time_data
             #  otherwise stack the new timepoint onto the existing image (Create )
             else:
-                resLev_data = np.stack(resLev_data, time_data)
+
+                resLev_data = np.concatenate([resLev_data, time_data], axis=0)
 
         #  with reslevel_data, on each iteration open the output hdf5 and store the reslevel as its own reslevel dataset,
         #  then close to save RAM.
         file.close()
-        out_file = h5py.File(out_path + str(random.getrandbits(10)) + ".hdf")
+        out_file = h5py.File(out_path)
         out_file.create_dataset("resolution_level_" + str(resLev), data=resLev_data) # , compression="gzip", compression_opts=9)
         resLev_data = []
         time_data = []
