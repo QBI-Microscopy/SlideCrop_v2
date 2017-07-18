@@ -93,19 +93,39 @@ def slicing_and_operating_datasets(PATH):
     Used in .select_hyperslab(start, count, stride, block)
     """
 
-
     file = h5py.h5f.open(PATH.encode())
 
     #Slicing sequential data
     r_set= h5py.h5d.open(file, "standard".encode())
     data_space = r_set.get_space()
-    data_space.select_hyperslab((0,0,0), (1,1,1), (1,1,1), (r_set.shape[0], r_set.shape[1], 1))
-    slicer1 = r_set.read(h5py.h5s.ALL, data_space, np.zeros((400,400)))
-    slicer2 = r_set[0,:,0]
-    slicer3 = r_set[:,0,0]
-    slicer4 = r_set[:,1:20,1:20]
-    slicer5 = r_set[1:20,1:20, :]
 
+    slicer1 = np.zeros((1,400))
+    slicer2 =np.zeros((1,400, 1))
+    slicer3 = np.zeros((400,1,1))
+    slicer4 = np.zeros((400, 20, 20))
+    slicer5 = np.zeros((20,20, 400))
+
+    #r_set[0,0,:]
+    data_space.select_hyperslab((0, 0, 0), (1, 1, 1), (1, 1, 1), (1,1,r_set.shape[2]))
+    r_set.read(h5py.h5s.ALL, data_space, slicer1)
+
+    # r_set[0,:,0]
+    data_space.select_hyperslab((0,0,0), (1, 1, 1), (1, 1, 1), (1, r_set.shape[1], 1))
+    r_set.read(h5py.h5s.ALL, data_space, slicer2)
+
+    #r_set[:,0,0]
+    data_space.select_hyperslab((0,0,0), (1, 1, 1), (1, 1, 1), (r_set.shape[0], 1,1))
+    r_set.read(h5py.h5s.ALL, data_space, slicer3)
+
+    #r_set[:,1:20,1:20]
+    data_space.select_hyperslab((0,0,0), (r_set.shape[0], 1, 1), (1,0,0), (1,19,19))
+    r_set.read(h5py.h5s.ALL, data_space, slicer4)
+
+    #r_set[1:20,1:20, :]
+    data_space.select_hyperslab((0, 0, 0), (1, 1, r_set.shape[2]), (0, 0, 1), (1, 19, 19))
+    r_set.read(h5py.h5s.ALL, data_space, slicer5)
+
+    """
     #Slicing chunked Data
     sub = h5py.h5g.open(file, "subgroup".encode())
     ch_set = h5py.h5d.open(sub, "chunked".encode())
@@ -125,6 +145,7 @@ def slicing_and_operating_datasets(PATH):
     slicec3 = c_set[:, 0, 0]
     slicec4 = c_set[:, 1:20, 1:20]
     slicec5 = c_set[1:20, 1:20, :]
+    """
     file.close()
 
 #  Typical operations for saving and sending data into .tiff file formats
@@ -151,6 +172,6 @@ if __name__ == '__main__':
      p = LineProfiler()
      p.add_function(slicing_and_operating_datasets)
      for i in range(10):
-       p.runcall(slicing_and_operating_datasets, "E:/lowtesting111.hdf")
+       p.runcall(slicing_and_operating_datasets, "E:/low34.hdf")
 
      p.print_stats()
