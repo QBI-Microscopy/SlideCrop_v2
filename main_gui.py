@@ -1747,7 +1747,7 @@ class SlideCrop(wx.Frame):
         for idx in range(len(roiArray)):
             if len(roiArray) > 1:
                 wx.CallAfter(dlg.Update,idx)
-            print "Processing section number:  " + str(idx+1)
+            print("Processing section number:  " + str(idx+1))
             
             roi = roiArray[idx]
             rowstart = roi[1]

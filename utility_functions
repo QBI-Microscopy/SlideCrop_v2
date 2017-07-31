@@ -17,8 +17,10 @@ def create_mock_ims_file(OutPath, size, pixels):
     resLev, Time, Channel = size
     for r in range(resLev):
         r_group = dataset.create_group("ResolutionLevel " + str(r))
+
         for t in range(Time):
             t_group = r_group.create_group("TimePoint " + str(t))
+
             for c in range(Channel):
                 c_group = t_group.create_group("Channel " + str(c))
                 data = im.zoom(image, (1,(1-r/resLev), (1-r/resLev)))

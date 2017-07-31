@@ -1,0 +1,18 @@
+Class InputImage
+    - Abstract of interface between potential input image files
+    - Defines methods to prepare and set up image, return metadata and image data.
+
+Class ImarisImage
+    - Concrete subclass of InputImage for the data of an Imaris image and its metadata
+
+Class MainApplication
+    - Front End interface for the SlideCrop interface
+
+Class ImageSegmentation
+    - Data Class to store the segmentation (crop boxes)
+
+Class ImageCropper
+    - Abstract Class to apply a ImageSegmentation object to an InputImage object
+
+Class TIFFImageCropper
+    - Concrete Class to implement ImageCropper methods. Output to TIFF format.

@@ -58,6 +58,8 @@ class SlideImage:
         # region == None -> duplicate whole image
         im_dtype = np.dtype('uint8')
         self.imarray = np.zeros((1,int(regionH),int(regionW)),dtype=im_dtype)
+        print(regionH)
+        print(regionW)
 
         if region:
             try:
@@ -120,16 +122,22 @@ class SlideImage:
                 self.imarray[:,:,0] = data[0,:,:]            
             #get just a single channel
         return self.imarray        
-      
+
+
+    """
+        Returns the String Directory for the Imaris format for the given channel, time and resolution. 
+    """
+    def directory_path(selfself, ResLevel, TimePoint, Channel):
+        return '/DataSet/ResolutionLevel {}/TimePoint {}/Channel {}/Data'.format(str(ResLevel),
+                                                                                    str(TimePoint),
+                                                                                    str(Channel))
 
     """
     Return an np.array for the resolution 7 data in channel=0 and timepoint=0
     """
     def display_image(self):
-        respath = '/DataSet/ResolutionLevel 7/'
-        minrespath = respath + 'TimePoint 0/' + 'Channel 0'
-        self.imres7 = self.infile[minrespath]["Data"]
-        return self.imres7
+        return self.infile.get(self.directory_path(self.resolution_levels(), 0,0))
+
 
     """
     Returns a string representation of the microscope mode. Described in docs as the "Deconvolution parameter"
@@ -201,6 +209,9 @@ class SlideImage:
     Returns a tuple of (Min data extension, Max data extensions) where each is an array [3].
         min Data extension is the data origin for the x,y,z dimensions
         Max data extension is the x,y,z maxs
+        
+        HAS NO USAGES 
+        
     """
     def extents(self):
         self.extMax = []
@@ -227,13 +238,14 @@ class SlideImage:
         self.xscale = []
         self.yscale = []
         slideSize = self.image_size()
+        print(slideSize[0], slideSize[1])
         maxressize = slideSize[0]
-        Xmax = maxressize[2]
-        Ymax = maxressize[1]
+        Xmax = maxressize[1]
+        Ymax = maxressize[0]
         for r in range(self.resLevels):
             slideshape = slideSize[r]
-            self.xscale.append(float(slideshape[2]) / float(Xmax))
-            self.yscale.append(float(slideshape[1]) / float(Ymax))
+            self.xscale.append(float(slideshape[1]) / float(Xmax))
+            self.yscale.append(float(slideshape[0]) / float(Ymax))
             
         return self.xscale, self.xscale
 
@@ -359,8 +371,7 @@ def dict_builder(inputfile,path, folder, numFolders):
 def list2str(inputarray):
     str_list = []
     for iExt in range(len(inputarray)):
-        str_list.append(inputarray[iExt])
-        
+        str_list.append(str(inputarray[iExt]).replace("b'", '').replace("'" ,""))
     return ''.join(str_list)
 
 FILENAME = "C:/Users/uqjeadi2/Downloads/NG_GAD67_GFP16-B.ims"
