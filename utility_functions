@@ -6,7 +6,7 @@ def create_mock_ims_file(OutPath, size, pixels):
     Creates a hdf file that has the file structure of an IMS file without and metadata or histograms
     :param OutPath: String value for the output of the file
     :param size: List of the number of elements in the each of the directories in the form [ResolutionLevel, TimePoint, Channel]
-    :param pixels: int of the size of the highest resolution image. Image will be square. 
+    :param pixels: int of the size of the highest resolution image; lower resolution will be proportionally reduced. Image will be square.
     :return: null
     """
     file = h5py.File(OutPath)
