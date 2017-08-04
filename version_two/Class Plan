@@ -11,8 +11,6 @@ Class ImageSegmentation
 Class ImageSegmenter
     - Produces an ImageSegmentation object from an 2D image array
 
-Class ImageCropper:
-
 Class ImageCropper
     - Abstract interface for applying a ImageSegmentation object to an InputImage object for an outputted file format
 
