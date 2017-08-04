@@ -373,12 +373,3 @@ def list2str(inputarray):
     for iExt in range(len(inputarray)):
         str_list.append(str(inputarray[iExt]).replace("b'", '').replace("'" ,""))
     return ''.join(str_list)
-
-FILENAME = "C:/Users/uqjeadi2/Downloads/NG_GAD67_GFP16-B.ims"
-def testing_function():
-    testImage = SlideImage(FILENAME)
-    print(testImage.datasetinfo_image())
-
-if __name__ == '__main__':
-    testing_function()
-
