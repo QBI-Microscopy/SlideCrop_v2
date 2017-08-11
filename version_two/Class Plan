@@ -71,5 +71,6 @@ Dependencies: ImageCropper, ImageSegmentation, ImarisImage
 2. Test Suites and Implementation for TIFFImageCropper
 3  Time, Memory Optimisation for ImageCropper and Segmentation Accuracy Testing
 4  Large DataSet Testing
-5  Front End Application Testing
-6  User Experience testing and Feedback
+5  Implement Metadata transfer
+6  Front End Application Testing
+7  User Experience testing and Feedback
