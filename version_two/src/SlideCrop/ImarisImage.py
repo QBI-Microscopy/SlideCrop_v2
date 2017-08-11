@@ -39,7 +39,7 @@ class ImarisImage(InputImage):
             return dataset[z, :, :]
 
     # noinspection PyUnboundLocalVariable,PyUnboundLocalVariable
-    def get_euclidean_subset_in_resolution(self, r, c, x, y, z, t):
+    def get_euclidean_subset_in_resolution(self, r, t, c, z, y, x):
         """
         :param r: Resolution Level integer 
         :param c: [c1, c2] of channel range indexing. c2>=c1 
@@ -56,18 +56,18 @@ class ImarisImage(InputImage):
                 dataset = self.file[path][z[0]:z[1], y[0]:y[1], x[0]:x[1]]
 
                 #  if timeSubspace exists, stack the current dataSet, else create timeSubspace
-                if 'timeSubspace' in locals():
-                    time_subspace = np.concatenate(time_subspace, dataset)
+                if 'time_subspace' in locals():
+                        time_subspace.append(dataset)
                 else:
-                    time_subspace = dataset
+                    time_subspace = [dataset]
 
-                del dataset
+
             if "subspace" in locals():
-                subspace = np.concatenate(subspace, time_subspace)
+                subspace.append(time_subspace)
             else:
-                subspace = time_subspace
-            del time_subspace
-        return subspace
+                subspace = [np.stack(time_subspace)]
+            #del time_subspace
+        return np.stack(subspace)
 
     def get_low_res_image(self):
         """

@@ -29,16 +29,15 @@ class ImarisImageTest(unittest.TestCase):
                          "get_two_dim_data returns correct values")
 
     def test_get_euclidean_subset_in_resolution(self):
-        test_array = self.Image.get_euclidean_subset_in_resolution(self.lowest_res, [0,2], [500, 505],
-                                                                                    [500, 505], [0,1],
-                                                                                    [0, 1])
-        self.assertEqual(test_array.shape, (2, 5, 5, 1, 1), "get_euclidean_subset_in_resolution returns correct shape"
+        test_array = self.Image.get_euclidean_subset_in_resolution(self.lowest_res, [0,1], [0,3], [0,1], [500, 505],
+                                                                                    [500, 505])
+        self.assertEqual(test_array.shape, (1,3,1,5,5), "get_euclidean_subset_in_resolution returns correct shape"
                                                             " array")
-        self.assertTrue((test_array[0, :, :, 0, 0] == [[11, 12, 13,  0,  0],
+        self.assertTrue((test_array[0, 0, 0, :,:] == np.array([[11, 12, 13,  0,  0],
                                                     [12, 10, 12,  0,  0],
                                                     [10, 11, 11,  0,  0],
                                                     [10, 12, 11,  0,  0],
-                                                    [11, 13, 11,  0,  0]]).all(),
+                                                    [11, 13, 11,  0,  0]])).all(),
                          "get_euclidean_subset_in_resolution returns correct valued array")
 
 
