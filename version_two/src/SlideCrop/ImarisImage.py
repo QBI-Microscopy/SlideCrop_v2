@@ -17,11 +17,11 @@ class ImarisImage(InputImage):
         :param filename: String path to the given image file. 
         """
         self.filename = filename
-        self.file = h5py.File(self.filename, 'r')
-        # will be defined as self.segmentation_resolution
-        self.segment_resolution = self._set_segmentation_res()  # resolution level to be used for segmentation
+        self.file = h5py.File(self.filename, "r")
         self.resolutions = self.get_resolution_levels()
 
+        # will be defined as self.segmentation_resolution
+        self.segment_resolution = self._set_segmentation_res()  # resolution level to be used for segmentation
     # noinspection PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=[]):
         """
@@ -49,8 +49,9 @@ class ImarisImage(InputImage):
         :param t: [t1, t2] of t dimension indexing. t2>=t1
         :return: ndarray of up to 5 dimensions for the image data of a given resolution in shape [c,x,y,z,t]
         """
-        for tPoint in t:
-            for cLevel in c:
+        for tPoint in range(t[0], t[1]):
+            for cLevel in range(c[0], c[1]):
+
                 path = "/DataSet/ResolutionLevel {0}/TimePoint {1}/Channel {2}/Data".format(r, tPoint, cLevel)
                 dataset = self.file[path][z[0]:z[1], y[0]:y[1], x[0]:x[1]]
 
@@ -85,7 +86,7 @@ class ImarisImage(InputImage):
         """
         if (self.resolutions != 0) & (self.get_channel_levels() != 0):
             return self.file['/DataSet/ResolutionLevel {0}/TimePoint 0/Channel 0/Data'
-                             .format(self.segment_resolution - 1)]
+                             .format(self.segment_resolution)]
         # Else return empty Array of shape (0,0)
         return [[]]
 
@@ -145,13 +146,13 @@ class ImarisImage(InputImage):
         :return: a nested array of (x,y) sizes for all resolution levels by ascending resolution level number (0 first).
         """
         dimensions_stack = []
-        i = self.resolutions - 1
-        while i >= 0:
+        i =0
+        while i < self.resolutions:
             path = '/DataSet/ResolutionLevel {0}/TimePoint 0/Channel 0/Data'.format(i)
             y = self.file[path].shape[1]
             x = self.file[path].shape[2]
             dimensions_stack.append((y, x))
-            i -= 1
+            i += 1
         return dimensions_stack
 
     def metadata_json(self):
