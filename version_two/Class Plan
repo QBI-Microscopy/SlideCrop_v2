@@ -62,3 +62,14 @@ Methods:    crop_input_images(InputImage, Output_path)
 
 Class: TIFFImageCropper
 Dependencies: ImageCropper, ImageSegmentation, ImarisImage
+
+########################################################################################################################
+################################################## Development Plan ####################################################
+########################################################################################################################
+1. Initial Plan and Interface
+2. Test Suites and Implementation for ImarisImage, ImageSegmentation, ImageSegmenter
+2. Test Suites and Implementation for TIFFImageCropper
+3  Time, Memory Optimisation for ImageCropper and Segmentation Accuracy Testing
+4  Large DataSet Testing
+5  Front End Application Testing
+6  User Experience testing and Feedback

@@ -1,5 +1,6 @@
-from InputImage import InputImage
+from .InputImage import InputImage
 import numpy as np
+import h5py
 SEGMENTATION_DIMENSION_MAX = 20000000
 
 class ImarisImage(InputImage):
@@ -11,7 +12,10 @@ class ImarisImage(InputImage):
         Constructor method
         :param filename: String path to the given image file. 
         """
-        pass
+        self.filename = filename
+        self.file = h5py.File(self.filename, 'r')
+        # will be defined as self.segmentation_resolution
+        self._set_segmentation_res() # resolution level to be used for segmentation
 
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=-1):
         """
@@ -36,7 +40,11 @@ class ImarisImage(InputImage):
         """
         :return: A 2D image with the lowest resolutions at t=0, z=0, c=0
         """
-        pass
+        if (self.get_resolution_levels() != 0) && (self.get_channel_levels() != 0):
+            return self.infile['/DataSet/ResolutionLevel {0}/TimePoint 0/Channel 0/Data'
+                                .format(self.get_resolution_levels()-1)][0,:,:]
+        # Else return empty Array of shape (0,0)
+        return [[]];
 
     def get_segment_res_image(self):
         """
@@ -49,33 +57,62 @@ class ImarisImage(InputImage):
         """
         :return: the number of resolution levels of the image 
         """
-        pass
+        return len(self.file['/DataSet'])
 
     def get_channel_levels(self):
         """
         :return: the number of channels the image has. 
         """
-        pass
+        channels = (self.infile['/DataSet/ResolutionLevel 0/TimePoint 0/'])
+        return channels if channels != None else 0
+
 
     def change_segment_res(self, r):
         """
         Changes the resolution level used during segmentation. 
         :return: null
         """
-        pass
+        if (r>=0 && r<self.get_resolution_levels()):
+            self.segment_resolution = r
+
+    def _set_segmentation_res(self):
+        image_dimensions = self.image_dimensions()
+        resolution_level = 0
+        while 1:
+            shape = image_dimensions[resolution_level]
+            return resolution_level if shape[0] * shape[1] <= SEGMENTATION_DIMENSION_MAX
+            resolution_level+=1
 
     def resolution_dimensions(self, r):
         """
         Returns the size of each dimension for a given channel. Generally z,c,t will not change amongst resolutions. 
         :return: An array of the form [x, y, z, c, t]
         """
-        pass
+        base = "/DataSet/ResolutionLevel {0}/".format(r)
+
+        t= len(self.file[base])
+        c= len(self.file[base + "TimePoint 0/"])
+
+        shape = self.file[base + "TimePoint 0/Channel 0/Data"].shape
+        z= shape[0]
+        y= shape[1]
+        x = shape[2]
+        return [x,y,z,c,t]
+
 
     def image_dimensions(self):
         """
         :return: a nested array of (x,y) sizes for all resolution levels by ascending resolution level number (0 first).
         """
-        pass
+        dimensionsStack = []
+        i = self.get_resolution_levels() -1
+        while i>=0:
+            path = '/DataSet/ResolutionLevel {0}/TimePoint 0/Channel 0/Data'.format(i)
+            y = self.file[path].shape[1]
+            x = self.file[path].shape[2]
+            dimensionsStack.append((y,x))
+            i-=1
+        return dimensionsStack
 
     def metadata_json(self):
         """
@@ -92,7 +129,7 @@ class ImarisImage(InputImage):
 
     def close_file(self):
         """
-        Closes the associated file of the image.
+        Closes the associated file of the image. Good memory practice before removing this object or reference. 
         :return: null
         """
-        pass
+        self.file.close()
