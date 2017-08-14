@@ -1,4 +1,5 @@
-from version_two.src.SlideCrop.ImageSegmentation import ImageSegmentation, InvalidSegmentError
+from version_two.src.SlideCrop.ImageSegmentation import ImageSegmentation as ImageSegmentation
+from version_two.src.SlideCrop.ImageSegmentation import  InvalidSegmentError as InvalidSegmentError
 import unittest
 
 
@@ -33,7 +34,7 @@ class ImageSegmentationTest(unittest.TestCase):
     ##  Following tests are all for illegal values being used in the add_segmentation method.
     def test_negative_point(self):
         with self.assertRaises(InvalidSegmentError):
-            self.object.add_segmentation(0, 0, -5, 5)
+            self.object.add_segmentation(-5, 0, 0, 5)
 
     def test_x_values(self):
         with self.assertRaises(InvalidSegmentError):
