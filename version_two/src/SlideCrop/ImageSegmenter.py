@@ -1,3 +1,5 @@
+from .ImageSegmentation import ImageSegmentation
+
 class ImageSegmenter(object):
     """
     Static Methods to segment an 2D image 
