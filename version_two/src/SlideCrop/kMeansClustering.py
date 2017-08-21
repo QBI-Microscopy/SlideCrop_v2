@@ -54,8 +54,8 @@ for i in range(20):
     Uo = Uo_temp
     Ua = Ua_temp
 binary_image = np.zeros((x_dim_image_edge, y_dim_image_edge))
-binary_image = (((abs(channel_image-Uo) < abs(channel_image - Ub)) & (abs(channel_image-Uo) < abs(channel_image - Ub))) +
-                3*((abs(channel_image-Ua) < abs(channel_image - Ub)) & (abs(channel_image-Ua) < abs(channel_image - Uo))))
-
+binary_image[np.where((abs(channel_image-Uo) < abs(channel_image - Ub)) & (abs(channel_image-Uo) < abs(channel_image - Ub)))] = Uo
+binary_image[np.where((abs(channel_image-Ua) < abs(channel_image - Ub)) & (abs(channel_image-Ua) < abs(channel_image - Uo)))] = Ua
+binary_image[np.where((abs(channel_image-Ub) < abs(channel_image - Ua)) & (abs(channel_image-Ub) < abs(channel_image - Uo)))] = Ub
 plt.imshow(binary_image)
 plt.show()
