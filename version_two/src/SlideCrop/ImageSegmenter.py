@@ -35,4 +35,3 @@ class ImageSegmenter(object):
         :return: 
         """
 
-    def _
