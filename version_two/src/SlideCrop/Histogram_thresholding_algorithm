@@ -1,7 +1,6 @@
 import scipy.ndimage as nd
 import numpy as np
 import matplotlib.pyplot as plt
-K_Clusters = 5
 BGPCOUNT = 40
 SENSITIVITY_THRESHOLD = 0.01
 image = nd.imread("E:/test1.jpg")
