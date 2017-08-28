@@ -24,8 +24,9 @@ class ImageSegmenter(object):
         :return: an ImageSegmentation object 
         """
         binary_image = ImageSegmenter._threshold_image(image_array, K_Clusters)
-        morphological_image = ImageSegmenter._apply_morphological_opening(binary_image)
-        return ImageSegmenter._apply_object_detection(morphological_image)
+        opened_image = ImageSegmenter._apply_morphological_opening(binary_image)
+        closed_image = ImageSegmenter._apply_morphological_closing(opened_image)
+        return ImageSegmenter._apply_object_detection(closed_image)
 
 
 
@@ -142,7 +143,7 @@ class ImageSegmenter(object):
     @staticmethod
     def _apply_morphological_opening(binary_image):
         """
-        Applies morphological opening to the binary_image to reduce noise and increase size of the foreground objects
+        Applies morphological opening to the binary_image to reduce noise. 
         :param binary_image: image to be opened.
         :return: A new binary image that has undergone opening. 
         """
@@ -151,13 +152,40 @@ class ImageSegmenter(object):
         return ndimage.binary_opening(binary_image, structure= structure).astype(np.int)
 
     @staticmethod
+    def _apply_morphological_closing(binary_image):
+        """
+        Applies morphological closing to the binary_image to increase size of the foreground objects
+        :param binary_image: image to be opened.
+        :return: A new binary image that has undergone opening. 
+        """
+        struct_size = int(min(binary_image.shape) * 0.005)
+        structure = np.ones((struct_size, struct_size))
+        return ndimage.binary_closing(binary_image, structure=structure).astype(np.int)
+
+    @staticmethod
     def _apply_object_detection(morphological_image):
         """
         Detects foreground objects from a binary, opened image. 
         :param morphological_image: Binary image
         :return: A ImageSegmentation object
         """
-        pass
+        segmentations = ImageSegmentation(morphological_image.shape[0], morphological_image.shape[1])
+        object_list = ndimage.find_objects(morphological_image)
+        for box in object_list:
+            box_dim = ImageSegmenter._get_box_from_slice(box)
+            segmentations.add_segmentation(box_dim[0], box_dim[1], box_dim[2], box_dim[3])
+        return segmentations
 
+    @staticmethod
+    def _get_box_from_slice(box):
+        """
+        returns an array of two points [x1, y1, x2, y2] where point 1 is the left top corner and point 2 the right
+         bottom corner of a box surrounding an object. 
+        :param box: a 2 value tuple of slice objects
+        :return: an array of form [x1, y1, x2, y2] 
+        """
+        y_slice = box[0]
+        x_slice = box[1]
+        return [x_slice[0], y_slice[0], x_slice[1], y_slice[1]]
 
 

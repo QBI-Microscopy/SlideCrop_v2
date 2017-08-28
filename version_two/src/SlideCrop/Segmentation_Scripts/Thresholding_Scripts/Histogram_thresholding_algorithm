@@ -1,5 +1,6 @@
 import scipy.ndimage as nd
 import numpy as np
+import matplotlib.pyplot as plt
 
 BGPCOUNT = 40  #  Background Pixel Count: Pixel length of the squares to be used in the image corners.
 SENSITIVITY_THRESHOLD = 0.01
@@ -43,6 +44,9 @@ Histogram creation and variable definitions
 """
 for i in channel_image:
     histogram[i] += 1
+
+plt.plot(histogram)
+plt.show()
 
 thresh = 255  #  Threshold values from histogram
 new_thresh = 128
