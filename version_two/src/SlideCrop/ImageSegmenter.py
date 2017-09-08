@@ -5,6 +5,7 @@ import scipy.ndimage as ndimage
 K_Clusters = 10
 BGPCOUNT = 40  # Background Pixel Count: Pixel length of the squares to be used in the image corners.
 SENSITIVITY_THRESHOLD = 0.01
+ITERATIONS = 2
 
 class ImageSegmenter(object):
 
@@ -118,10 +119,10 @@ class ImageSegmenter(object):
 
             # for each cluster, find mean of clustered pixel intensities
             # histogram[i] is number of pixels at intensity i
-            for k in range(K_Clusters):
+            for k in range(k):
                 weighted_mean_sum = sum(ind * histogram[ind] for ind in range(256) if index_histogram[ind] == k)
                 pixel_count = sum(histogram[ind] for ind in range(256) if index_histogram[ind] == k)
-                cluster_temp_vector[k] = weighted_mean_sum / pixel_count
+                cluster_temp_vector[k] = weighted_mean_sum / (pixel_count  +1)
 
             # If all clusters change less than the threshold -> finish iteration
             if (np.abs(cluster_vector / cluster_temp_vector - 1) < SENSITIVITY_THRESHOLD).all():
@@ -138,7 +139,7 @@ class ImageSegmenter(object):
         :return: a binary image of the median threshold from cluster_vector
         """
         binary_threshold = np.median(cluster_vector)
-        return (channel_image > binary_threshold).round()
+        return binary_threshold.round() * (channel_image > binary_threshold).round()
 
     @staticmethod
     def _apply_morphological_opening(binary_image):
@@ -149,7 +150,7 @@ class ImageSegmenter(object):
         """
         struct_size = int(min(binary_image.shape) * 0.005)
         structure = np.ones((struct_size, struct_size))
-        return ndimage.binary_opening(binary_image, structure= structure).astype(np.int)
+        return ndimage.binary_opening(binary_image, structure= structure, iterations= ITERATIONS).astype(np.int)
 
     @staticmethod
     def _apply_morphological_closing(binary_image):
@@ -160,7 +161,7 @@ class ImageSegmenter(object):
         """
         struct_size = int(min(binary_image.shape) * 0.005)
         structure = np.ones((struct_size, struct_size))
-        return ndimage.binary_closing(binary_image, structure=structure).astype(np.int)
+        return ndimage.binary_closing(binary_image, structure=structure, iterations= ITERATIONS).astype(np.int)
 
     @staticmethod
     def _apply_object_detection(morphological_image):
@@ -171,6 +172,8 @@ class ImageSegmenter(object):
         """
         segmentations = ImageSegmentation(morphological_image.shape[0], morphological_image.shape[1])
         object_list = ndimage.find_objects(morphological_image)
+        print("objects")
+        print(object_list)
         for box in object_list:
             box_dim = ImageSegmenter._get_box_from_slice(box)
             segmentations.add_segmentation(box_dim[0], box_dim[1], box_dim[2], box_dim[3])
@@ -184,8 +187,8 @@ class ImageSegmenter(object):
         :param box: a 2 value tuple of slice objects
         :return: an array of form [x1, y1, x2, y2] 
         """
-        y_slice = box[0]
-        x_slice = box[1]
-        return [x_slice[0], y_slice[0], x_slice[1], y_slice[1]]
+        y_slice = box[1]
+        x_slice = box[0]
+        return [x_slice.start, y_slice.start, x_slice.stop, y_slice.stop]
 
 
