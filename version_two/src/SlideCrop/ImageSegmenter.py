@@ -3,7 +3,7 @@ import numpy as np
 import scipy.ndimage as ndimage
 
 K_Clusters = 10
-BGPCOUNT = 40  # Background Pixel Count: Pixel length of the squares to be used in the image corners.
+BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used in the image corners.
 SENSITIVITY_THRESHOLD = 0.01
 ITERATIONS = 2
 
@@ -44,6 +44,32 @@ class ImageSegmenter(object):
         cluster_vector = ImageSegmenter._k_means_iterate(histogram, k)
         return ImageSegmenter._apply_cluster_threshold(cluster_vector, channel_image)
 
+    @staticmethod
+    def _has_dark_objects(image):
+        mean_background_vector = ImageSegmenter._background_average_vector(image)
+        return np.sum((mean_background_vector > 127).round()) >= 2
+
+
+    @staticmethod
+    def _background_average_vector(image):
+        x_dim = image.shape[0]
+        y_dim = image.shape[1]
+
+        background_index_x_list = []
+        background_index_y_list = []
+        for i in range(BGPCOUNT):
+            background_index_x_list.append(i);
+            background_index_y_list.append(i);
+            background_index_x_list.append(x_dim - (i + 1));
+            background_index_y_list.append(y_dim - (i + 1));
+
+        if image.ndim == 3:
+            # Create a image vector with pixel values from the 2D corners of all channels. Used as a background intensity mean.
+            background_vector = image[background_index_x_list, background_index_y_list, :]
+            return np.mean(np.mean(background_vector, axis=1), axis=0)
+        else:
+            background_vector = image[background_index_x_list, background_index_y_list]
+            return np.mean(background_vector)
 
     @staticmethod
     def _optimal_thresholding_channel_image(image):
@@ -60,19 +86,7 @@ class ImageSegmenter(object):
             # Averaged across axis separately. Shape = (x,y,3) -> (x -> 3) -> (1,3)
             channel_mean_vector = np.mean(np.mean(image, axis=1), axis=0)
 
-            #  Find x & y indices for the four corner squares of size BGPCOUNT * BGPCOUNT
-            background_index_x_list = []
-            background_index_y_list = []
-            for i in range(BGPCOUNT):
-                background_index_x_list.append(i);
-                background_index_y_list.append(i);
-                background_index_x_list.append(x_dim - (i + 1));
-                background_index_y_list.append(y_dim - (i + 1));
-
-            # Create a image vector with pixel values from the 2D corners of all channels. Used as a background intensity mean.
-            background_vector = image[background_index_x_list, background_index_y_list, :];
-
-            background_channel_mean_vector = np.mean(np.mean(background_vector, axis=1), axis=0)
+            background_channel_mean_vector = ImageSegmenter._optimal_thresholding_channel_image(image)
 
             # Choose channel for clustering based on maximum difference in background and average intensity
             max_difference_channel = np.abs(background_channel_mean_vector - channel_mean_vector)
@@ -131,15 +145,19 @@ class ImageSegmenter(object):
 
 
     @staticmethod
-    def _apply_cluster_threshold(cluster_vector, channel_image):
+    def _apply_cluster_threshold(cluster_vector, channel_image, darkObjects):
         """
         Applies the cluster_vector thresholds to the channel_image to create a binary image. 
         :param cluster_vector: 1D array of cluster pixel intensities
         :param channel_image: 2D image array
         :return: a binary image of the median threshold from cluster_vector
         """
-        binary_threshold = np.median(cluster_vector)
-        return binary_threshold.round() * (channel_image > binary_threshold).round()
+        if(darkObjects):
+            binary_threshold = cluster_vector[-2]
+            return 255 * (channel_image > binary_threshold).round()
+        else:
+            binary_threshold = cluster_vector[1]
+            return 255 * (channel_image > binary_threshold).round()
 
     @staticmethod
     def _apply_morphological_opening(binary_image):

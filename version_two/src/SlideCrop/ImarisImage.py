@@ -2,7 +2,7 @@ from .InputImage import InputImage
 import numpy as np
 import h5py
 
-SEGMENTATION_DIMENSION_MAX = 20000000
+SEGMENTATION_DIMENSION_MAX = 50000000
 
 
 class ImarisImage(InputImage):
