@@ -47,7 +47,8 @@ class ImageSegmenter(object):
     @staticmethod
     def _has_dark_objects(image):
         mean_background_vector = ImageSegmenter._background_average_vector(image)
-        return np.sum((mean_background_vector > 127).round()) >= 2
+        print(mean_background_vector)
+        return (mean_background_vector > 127)
 
 
     @staticmethod
@@ -189,12 +190,15 @@ class ImageSegmenter(object):
         :return: A ImageSegmentation object
         """
         segmentations = ImageSegmentation(morphological_image.shape[0], morphological_image.shape[1])
-        object_list = ndimage.find_objects(morphological_image)
+        if not ImageSegmenter._has_dark_objects(morphological_image):
+            morphological_image = 255- morphological_image
+        labelled_image, objects = ndimage.label(morphological_image)
+        object_list = ndimage.find_objects(labelled_image, objects)
         print("objects")
         print(object_list)
         for box in object_list:
             box_dim = ImageSegmenter._get_box_from_slice(box)
-            segmentations.add_segmentation(box_dim[0], box_dim[1], box_dim[2], box_dim[3])
+            #segmentations.add_segmentation(box_dim[0], box_dim[1], box_dim[2], box_dim[3])
         return segmentations
 
     @staticmethod
@@ -205,8 +209,8 @@ class ImageSegmenter(object):
         :param box: a 2 value tuple of slice objects
         :return: an array of form [x1, y1, x2, y2] 
         """
-        y_slice = box[1]
-        x_slice = box[0]
-        return [x_slice.start, y_slice.start, x_slice.stop, y_slice.stop]
-
+        # y_slice = box[1]
+        # x_slice = box[0]
+        # return [x_slice.start, y_slice.start, x_slice.stop, y_slice.stop]
+        #
 
