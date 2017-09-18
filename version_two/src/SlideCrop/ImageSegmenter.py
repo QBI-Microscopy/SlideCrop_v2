@@ -4,7 +4,7 @@ import scipy.ndimage as ndimage
 
 K_Clusters = 10
 BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used in the image corners.
-SENSITIVITY_THRESHOLD = 0.01
+SENSITIVITY_THRESHOLD = 0.05
 ITERATIONS = 2
 
 class ImageSegmenter(object):
@@ -47,7 +47,7 @@ class ImageSegmenter(object):
     @staticmethod
     def _has_dark_objects(image):
         mean_background_vector = ImageSegmenter._background_average_vector(image)
-        print(mean_background_vector)
+        print("background mean {}".format(mean_background_vector))
         return (mean_background_vector > 127)
 
 
@@ -87,7 +87,7 @@ class ImageSegmenter(object):
             # Averaged across axis separately. Shape = (x,y,3) -> (x -> 3) -> (1,3)
             channel_mean_vector = np.mean(np.mean(image, axis=1), axis=0)
 
-            background_channel_mean_vector = ImageSegmenter._optimal_thresholding_channel_image(image)
+            background_channel_mean_vector = ImageSegmenter._background_average_vector(image)
 
             # Choose channel for clustering based on maximum difference in background and average intensity
             max_difference_channel = np.abs(background_channel_mean_vector - channel_mean_vector)
@@ -140,7 +140,7 @@ class ImageSegmenter(object):
                 cluster_temp_vector[k] = weighted_mean_sum / (pixel_count  +1)
 
             # If all clusters change less than the threshold -> finish iteration
-            if (np.abs(cluster_vector / cluster_temp_vector - 1) < SENSITIVITY_THRESHOLD).all():
+            if (np.abs((cluster_vector - cluster_temp_vector)/cluster_temp_vector) < SENSITIVITY_THRESHOLD).all():
                 return cluster_temp_vector
             cluster_vector = cluster_temp_vector.copy()
 
@@ -192,11 +192,10 @@ class ImageSegmenter(object):
         segmentations = ImageSegmentation(morphological_image.shape[0], morphological_image.shape[1])
         if not ImageSegmenter._has_dark_objects(morphological_image):
             morphological_image = 255- morphological_image
-        labelled_image, objects = ndimage.label(morphological_image)
+        labelled_image, objects = ndimage.label(morphological_image, np.ones((3, 3)))
         object_list = ndimage.find_objects(labelled_image, objects)
-        print("objects")
-        print(object_list)
         for box in object_list:
+            print(box)
             box_dim = ImageSegmenter._get_box_from_slice(box)
             #segmentations.add_segmentation(box_dim[0], box_dim[1], box_dim[2], box_dim[3])
         return segmentations
