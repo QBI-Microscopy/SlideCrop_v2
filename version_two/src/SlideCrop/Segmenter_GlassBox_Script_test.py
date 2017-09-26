@@ -33,7 +33,7 @@ def _object_fill(binary_image):
     #return ndimage.binary_dilation(binary_image, structure=structure, iterations= 2).astype(np.int)
 
 WORK_DIR = "E:/"
-im = io.imread(WORK_DIR + "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") # "testdata1_resolution3/AT8 wt2223m 11~B.jpg") #"testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") # "testdata1_resolution3/AT8 wt2223m 11~B.jpg") #'testfile4.jpg') #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") #  'testfile4.jpg') # "testdata2_resolution4/170818_APP_1878 UII_BF~B.jpg") # "'td11.png') # 'testfile4.jpg')
+im = io.imread(WORK_DIR + "td11.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # 'trial.jpg') # "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") # "testdata3_resolution3/AVD M10 S21~B.jpg") # testdata1_resolution4/td1Image1.jpg") #   # "testdata1_resolution3/AT8 wt2223m 11~B.jpg") #"testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") #'testfile4.jpg') #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") #  'testfile4.jpg') # "testdata2_resolution4/170818_APP_1878 UII_BF~B.jpg") # "'td11.png') # 'testfile4.jpg')
 im = misc.imresize(im, size= (3000, 1200))
 print(im.shape)
 histogram = seg._image_histogram(im)
@@ -57,7 +57,7 @@ if black_objects:
     black_objects = not black_objects
 
 misc.imsave("{}{}".format(res_dir, "2thresholded_photo.png"), binary)
-del channel_im
+#del channel_im
 print("thresholded image saved")
 
 closed_image = _object_fill(binary)
@@ -68,14 +68,14 @@ opened_image = _noise_reduction(closed_image)
 misc.imsave("{}{}".format(res_dir, "4noise_image.png"), opened_image)
 print("opened image saved")
 
-imlabeled, num_features = ndimage.measurements.label(opened_image, output=np.dtype("int"))
+imlabeled, num_features = ndimage.measurements.label(opened_image, output=np.dtype("int")) #opened_image, output=np.dtype("int"))
 sizes = ndimage.sum(opened_image, imlabeled, range(num_features + 1))
 mask_size = sizes < 1000
 misc.imsave("{}{}".format(res_dir, "5labels.png"), imlabeled)
 
 # get non-object pixels and set to zero
 remove_pixel = mask_size[imlabeled]
-imlabeled[remove_pixel] = 0
+#imlabeled[remove_pixel] = 0
 labels = np.unique(imlabeled)
 misc.imsave("{}{}".format(res_dir, "6removepixel.png"), imlabeled)
 
@@ -92,7 +92,7 @@ for i in range(len(labels) - 1):
     lab.append(i + 1)
 
 
-objs = ndimage.measurements.find_objects(label_clean, max_label=len(labels))
+objs = ndimage.measurements.find_objects(imlabeled, max_label=len(labels))
 # If any objects have been found, return
 # return value will be array of tuple of 2 slice Objects
 # [(slice(0, 2, None), slice(0, 3, None)), (slice(2, 5, None), slice(2, 5, None))]
@@ -101,40 +101,94 @@ objs = filter(None, objs)
 objs = sorted(objs)
 print(len(objs))
 
+
+def is_noise (s1):
+    if (s1[0].stop - s1[0].start )*(s1[1].stop - s1[1].start )  < 1000:
+        return True
+    return False
+
+
 def intersect (s1, s2):
-    if ( s1[0].stop < s2[0].start) | (s1[0].start > s2[0].stop):
+    DELTA = 50
+    """
+    :param s1, s2: 2D tuples of slice objects i.e. (Slice, Slice) for a region of an image. 
+    :return: 1 if the intersection of the two regions is not empty (i.e. have common pixels)
+    """
+    if ( s1[0].stop + DELTA < s2[0].start) | (s1[0].start > s2[0].stop + DELTA):
         return False
-    return not ( s1[1].stop < s2[1].start) | (s1[1].start > s2[1].stop)
+    return not ( s1[1].stop + DELTA < s2[1].start) | (s1[1].start > s2[1].stop + DELTA)
 
 def add(s1, s2):
+    """
+    :param s1, s2: 2D tuples of slice objects i.e. (Slice, Slice) for a region of an image. 
+    :return: a 2D tuple of slice objects for a region of an image that contains both s1 and s2. 
+    """
     x_values = [s1[0].start, s2[0].start, s1[0].stop, s2[0].stop]
     y_values = [s1[1].start, s2[1].start, s1[1].stop, s2[1].stop]
     x_slice = slice(min(x_values), max(x_values))
     y_slice = slice(min(y_values), max(y_values))
     return (x_slice, y_slice)
 
+
 prev_len = len(objs)
 curr_len = len(objs)
 i = 0
 flag = True
-print((prev_len, curr_len))
-print((prev_len != curr_len) | flag)
-print(objs)
+
+
+for i in range(10):
+    for rect in objs:
+        if is_noise(rect):
+            objs.remove(rect)
+
+for i in objs :
+    print(i)
+
 while flag | (prev_len != curr_len):
     flag = False
-    while i < (len(objs) -1):
-        if(intersect(objs[i], objs[i+1])):
-            objs.append(add(objs.pop(i+1), objs.pop(i)))
-            print("true")
-        i+=1
 
-    objs = sorted(objs)
+    temp_list = []
+    i = 0
+    add_this_obj = 1
+    while i < (len(objs) -1):
+        j = i+1
+        x1 = objs[i][0]
+        x2  = objs[j][0]
+        while (not ( x1.stop < x2.start) | (x1.start > x2.stop))  & (j < len(objs)):
+            if intersect(objs[i], objs[j]):
+                print("i {}, j {} ".format(objs[i], objs[j]))
+                temp_list.append(add(objs.pop(j), objs.pop(i)))
+                add_this_obj = 0
+                j = len(objs)
+            else:
+                j += 1
+                if j < len(objs):
+                    x2 = objs[j][0]
+                else:
+                    j = len(objs)
+
+        if add_this_obj:
+            print("adding i = {}, objs[i] = {}".format(i, objs[i]))
+            temp_list.append(objs[i])
+            i += 1
+
+
+        add_this_obj = 1
+
+    if add_this_obj:
+        print("i {} = {}".format(len(objs) -1, objs[len(objs) -1]))
+        temp_list.append(objs[len(objs) -1])
+
+    objs = sorted(temp_list.copy())
+    del temp_list
+
     print(len(objs))
     prev_len = curr_len
     curr_len = len(objs)
     i = 0
 
-print(objs)
+for i in objs :
+    print(i)
 
 for i in range(len(objs)):
-    misc.imsave("{}8crop{}.png".format(res_dir, str(i)), label_clean[objs[i]])
+    misc.imsave("{}8crop{}.png".format(res_dir, str(i)), channel_im[objs[i]]) # label_clean[objs[i]])
