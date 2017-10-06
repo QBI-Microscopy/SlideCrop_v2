@@ -10,6 +10,20 @@ import scipy.ndimage as ndimage
 image size around 1000/1500 * 3000/3600
 """
 
+def image_histogram_equalization(image, number_bins=256):
+    # from http://www.janeriksolem.net/2009/06/histogram-equalization-with-python-and.html
+
+    # get image histogram
+    image_histogram, bins = np.histogram(image.flatten(), number_bins, normed=True)
+    cdf = image_histogram.cumsum() # cumulative distribution function
+    cdf = 255 * cdf / cdf[-1] # normalize
+
+    # use linear interpolation of cdf to find new pixel values
+    image_equalized = np.interp(image.flatten(), bins[:-1], cdf)
+
+    return image_equalized.reshape(image.shape)
+
+
 def _noise_reduction(binary_image):
     """
     Applies morphological opening to the binary_image to reduce noise. 
@@ -28,14 +42,13 @@ def _object_fill(binary_image):
     :return: A new binary image that has undergone opening. 
     """
     struct_size = 20  # int(min(binary_image.shape) * 0.01)
-    structure = np.ones((struct_size, struct_size))
-    return  ndimage.binary_fill_holes(binary_image, structure=structure).astype(np.int)
-    #return ndimage.binary_dilation(binary_image, structure=structure, iterations= 2).astype(np.int)
+    structure = np.ones((20, 8))      # ((struct_size, struct_size))
+    return  ndimage.binary_dilation(binary_image, structure=structure).astype(np.int)
+
 
 WORK_DIR = "E:/"
-im = io.imread(WORK_DIR + "td11.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # 'trial.jpg') # "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") # "testdata3_resolution3/AVD M10 S21~B.jpg") # testdata1_resolution4/td1Image1.jpg") #   # "testdata1_resolution3/AT8 wt2223m 11~B.jpg") #"testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") #'testfile4.jpg') #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") #  'testfile4.jpg') # "testdata2_resolution4/170818_APP_1878 UII_BF~B.jpg") # "'td11.png') # 'testfile4.jpg')
+im = io.imread(WORK_DIR + "testdata1_resolution4/AT8 wt2223m 11~B.jpg") #'trial.jpg') # "14864/1initial_photo.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") #'trial.jpg') # "_resolution4/170818_APP_1926_UII+O2_BF~B2combined.jpg") # 'trial.jpg') # "testdata1_resolution4/AT8 wt2223m 11~B.jpg")  # "14864/1initial_photo.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # "14864/1initial_photo.png") # _resolution4/170818_APP_1926_UII+O2_BF~B2combined.jpg") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # 'trial.jpg') # "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") # "testdata3_resolution3/AVD M10 S21~B.jpg") # testdata1_resolution4/td1Image1.jpg") #   # "testdata1_resolution3/AT8 wt2223m 11~B.jpg") #"testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") #'testfile4.jpg') #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") #  'testfile4.jpg') # "testdata2_resolution4/170818_APP_1878 UII_BF~B.jpg") # "'td11.png') # 'testfile4.jpg')
 im = misc.imresize(im, size= (3000, 1200))
-print(im.shape)
 histogram = seg._image_histogram(im)
 cluster = seg._k_means_iterate(histogram, 5)
 
@@ -48,8 +61,14 @@ if not os.path.exists(res_dir):
 channel_im = seg._optimal_thresholding_channel_image(im)
 misc.imsave("{}{}".format(res_dir, "1initial_photo.png"), channel_im)
 print("Initial photo saved")
+
+# channel_im = image_histogram_equalization(channel_im, 50)
+misc.imsave("{}{}".format(res_dir, "1zinitial_photo.png"), channel_im)
+print("Initial photo saved")
+
+
 black_objects = seg._has_dark_objects(channel_im)
-binary = seg._apply_cluster_threshold(cluster, channel_im, seg._background_average_vector(channel_im))
+binary =  seg._apply_cluster_threshold(cluster, channel_im, seg._background_average_vector(channel_im)) # channel_im > 27
 
 binary = binary.astype(int)
 if black_objects:
@@ -109,14 +128,15 @@ def is_noise (s1):
 
 
 def intersect (s1, s2):
-    DELTA = 50
+    DELTAY = 50
+    DELTAX = 20
     """
     :param s1, s2: 2D tuples of slice objects i.e. (Slice, Slice) for a region of an image. 
     :return: 1 if the intersection of the two regions is not empty (i.e. have common pixels)
     """
-    if ( s1[0].stop + DELTA < s2[0].start) | (s1[0].start > s2[0].stop + DELTA):
+    if ( s1[0].stop + DELTAX < s2[0].start) | (s1[0].start > s2[0].stop + DELTAX):
         return False
-    return not ( s1[1].stop + DELTA < s2[1].start) | (s1[1].start > s2[1].stop + DELTA)
+    return not ( s1[1].stop + DELTAY < s2[1].start) | (s1[1].start > s2[1].stop + DELTAY)
 
 def add(s1, s2):
     """
@@ -139,18 +159,21 @@ flag = True
 for i in range(10):
     for rect in objs:
         if is_noise(rect):
+
             objs.remove(rect)
 
 for i in objs :
     print(i)
 
 while flag | (prev_len != curr_len):
+    print("objs left: {}".format(len(objs)))
     flag = False
 
     temp_list = []
     i = 0
-    add_this_obj = 1
-    while i < (len(objs) -1):
+    while i < (len(objs) -1 ):
+        add_this_obj = 1
+
         j = i+1
         x1 = objs[i][0]
         x2  = objs[j][0]
@@ -159,7 +182,7 @@ while flag | (prev_len != curr_len):
                 print("i {}, j {} ".format(objs[i], objs[j]))
                 temp_list.append(add(objs.pop(j), objs.pop(i)))
                 add_this_obj = 0
-                j = len(objs)
+                j = len(objs) + 1
             else:
                 j += 1
                 if j < len(objs):
@@ -172,20 +195,20 @@ while flag | (prev_len != curr_len):
             temp_list.append(objs[i])
             i += 1
 
-
-        add_this_obj = 1
-
-    if add_this_obj:
-        print("i {} = {}".format(len(objs) -1, objs[len(objs) -1]))
-        temp_list.append(objs[len(objs) -1])
+    print("objs left {}".format(objs))
+    if len(objs) != 0:
+        print("Zadding i = {}, objs[i] = {}".format(i, objs[-1]))
+        # print("objs: {}".format(len(objs)))
+        # print("i {} = {}".format(len(objs) -1, objs[-1]))
+        temp_list.append(objs[-1])
 
     objs = sorted(temp_list.copy())
     del temp_list
 
-    print(len(objs))
     prev_len = curr_len
     curr_len = len(objs)
     i = 0
+    print("END OF main while length of temp_list {0}\n\n".format(curr_len))
 
 for i in objs :
     print(i)

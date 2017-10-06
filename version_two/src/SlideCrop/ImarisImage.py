@@ -22,7 +22,8 @@ class ImarisImage(InputImage):
 
         # will be defined as self.segmentation_resolution
         self.segment_resolution = self._set_segmentation_res()  # resolution level to be used for segmentation
-    # noinspection PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring
+
+    # noinspection PyIncorrectDocstring
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=[]):
         """
         :param region: array of the form [x1, y1, x2, y2] for the 2D subregion desired. 0 implies the whole of 2D. 
@@ -146,11 +147,19 @@ class ImarisImage(InputImage):
         :return: a nested array of (x,y) sizes for all resolution levels by ascending resolution level number (0 first).
         """
         dimensions_stack = []
+        lowest_path = '/DataSet/ResolutionLevel {0}/TimePoint 0/Channel 0/Data'.format(self.resolutions - 1)
+        if self.file[lowest_path].ndim == 3:
+            y_index = 1
+            x_index = 2
+        else:
+            y_index = 0
+            x_index = 1
+
         i =0
         while i < self.resolutions:
             path = '/DataSet/ResolutionLevel {0}/TimePoint 0/Channel 0/Data'.format(i)
-            y = self.file[path].shape[1]
-            x = self.file[path].shape[2]
+            y = self.file[path].shape[y_index]
+            x = self.file[path].shape[x_index]
             dimensions_stack.append((y, x))
             i += 1
         return dimensions_stack
