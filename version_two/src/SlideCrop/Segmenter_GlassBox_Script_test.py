@@ -10,18 +10,13 @@ import scipy.ndimage as ndimage
 image size around 1000/1500 * 3000/3600
 """
 
-def image_histogram_equalization(image, number_bins=256):
-    # from http://www.janeriksolem.net/2009/06/histogram-equalization-with-python-and.html
-
-    # get image histogram
-    image_histogram, bins = np.histogram(image.flatten(), number_bins, normed=True)
-    cdf = image_histogram.cumsum() # cumulative distribution function
-    cdf = 255 * cdf / cdf[-1] # normalize
-
-    # use linear interpolation of cdf to find new pixel values
-    image_equalized = np.interp(image.flatten(), bins[:-1], cdf)
-
-    return image_equalized.reshape(image.shape)
+def _construct_mean_channeled_image(resolution, imaris_image):
+    for i in range(imaris_image.get_channel_levels()):
+        if not 'image_array' in locals():
+            image_array = imaris_image.get_two_dim_data(resolution, c = i)
+        else:
+            image_array += imaris_image.get_two_dim_data(resolution, c = i)
+    return (image_array * (1/imaris_image.get_channel_levels()))
 
 
 def _noise_reduction(binary_image):
@@ -47,7 +42,7 @@ def _object_fill(binary_image):
 
 
 WORK_DIR = "E:/"
-im = io.imread(WORK_DIR + "testdata1_resolution4/AT8 wt2223m 11~B.jpg") #'trial.jpg') # "14864/1initial_photo.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") #'trial.jpg') # "_resolution4/170818_APP_1926_UII+O2_BF~B2combined.jpg") # 'trial.jpg') # "testdata1_resolution4/AT8 wt2223m 11~B.jpg")  # "14864/1initial_photo.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # "14864/1initial_photo.png") # _resolution4/170818_APP_1926_UII+O2_BF~B2combined.jpg") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # 'trial.jpg') # "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") # "testdata3_resolution3/AVD M10 S21~B.jpg") # testdata1_resolution4/td1Image1.jpg") #   # "testdata1_resolution3/AT8 wt2223m 11~B.jpg") #"testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") #'testfile4.jpg') #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") #  'testfile4.jpg') # "testdata2_resolution4/170818_APP_1878 UII_BF~B.jpg") # "'td11.png') # 'testfile4.jpg')
+im = io.imread(WORK_DIR + "_resolution4/170818_APP_1926_UII+O2_BF~B2combined.jpg") #"testdata1_resolution4/AT8 wt2223m 11~B.jpg") #'trial.jpg') # "14864/1initial_photo.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") #'trial.jpg') # "_resolution4/170818_APP_1926_UII+O2_BF~B2combined.jpg") # 'trial.jpg') # "testdata1_resolution4/AT8 wt2223m 11~B.jpg")  # "14864/1initial_photo.png") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # "14864/1initial_photo.png") # _resolution4/170818_APP_1926_UII+O2_BF~B2combined.jpg") # "testdata1_resolution4/AT8 wt2223m 11~B.jpg") # 'trial.jpg') # "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") # "testdata3_resolution3/AVD M10 S21~B.jpg") # testdata1_resolution4/td1Image1.jpg") #   # "testdata1_resolution3/AT8 wt2223m 11~B.jpg") #"testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") #'testfile4.jpg') #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") #  'testfile4.jpg') # "testdata2_resolution4/170818_APP_1878 UII_BF~B.jpg") # "'td11.png') # 'testfile4.jpg')
 im = misc.imresize(im, size= (3000, 1200))
 histogram = seg._image_histogram(im)
 cluster = seg._k_means_iterate(histogram, 5)
@@ -62,15 +57,11 @@ channel_im = seg._optimal_thresholding_channel_image(im)
 misc.imsave("{}{}".format(res_dir, "1initial_photo.png"), channel_im)
 print("Initial photo saved")
 
-# channel_im = image_histogram_equalization(channel_im, 50)
-misc.imsave("{}{}".format(res_dir, "1zinitial_photo.png"), channel_im)
-print("Initial photo saved")
-
 
 black_objects = seg._has_dark_objects(channel_im)
-binary =  seg._apply_cluster_threshold(cluster, channel_im, seg._background_average_vector(channel_im)) # channel_im > 27
+binary =  seg._apply_cluster_threshold(cluster, channel_im, black_objects) # seg._background_average_vector(channel_im)) # channel_im > 27
 
-binary = binary.astype(int)
+
 if black_objects:
     binary = 255 - binary
     black_objects = not black_objects
@@ -86,6 +77,8 @@ print("closed image saved")
 opened_image = _noise_reduction(closed_image)
 misc.imsave("{}{}".format(res_dir, "4noise_image.png"), opened_image)
 print("opened image saved")
+
+
 
 imlabeled, num_features = ndimage.measurements.label(opened_image, output=np.dtype("int")) #opened_image, output=np.dtype("int"))
 sizes = ndimage.sum(opened_image, imlabeled, range(num_features + 1))
