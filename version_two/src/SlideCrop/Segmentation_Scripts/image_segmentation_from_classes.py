@@ -1,7 +1,7 @@
 import version_two.src.SlideCrop.ImarisImage as I
 from version_two.src.SlideCrop.ImageSegmenter import ImageSegmenter as seg
 
-FILE = "E:/questionable_testdata/170818_APP_1926_UII+O2_BF~B.ims"
+FILE = "E:/testdata1/AT8 sc2231m 7~B.ims"
 image = I.ImarisImage(FILE)
 
 channelled_image = image.get_multichannel_segmentation_image()

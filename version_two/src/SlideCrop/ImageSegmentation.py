@@ -25,7 +25,6 @@ class ImageSegmentation(object):
         else:
             self.segments.append([x1, y1, x2, y2])
 
-
     def get_scaled_segments(self, width, height):
         """
         :param width: pixel width of image to be scaled to.
@@ -47,7 +46,7 @@ class ImageSegmentation(object):
         """
         :return: An array of segment boxes without scaling.  0<= x, y <=1. 
         """
-        return self.get_scaled_segments(1,1);
+        return self.get_scaled_segments(1, 1)
 
     def get_max_segment(self):
         """
@@ -72,6 +71,22 @@ class ImageSegmentation(object):
         """
         return (segment[0] - segment[2]) * (segment[1] - segment[3])
 
+    def change_segment_bounds(self, factor):
+        """
+        :param factor: a float value dictating the change in bounding box size. 
+        :return: an ImageSegmentation object with bounding boxes increased/decreased by the given factor
+        """
+        new_image_segmentation = ImageSegmentation(self.width, self.height)
+        for bounding_box in self.segments:
+            centre_point = [(bounding_box[0] + bounding_box[2])/2, (bounding_box[1] + bounding_box[3])/2]
+            half_dimensions = [(bounding_box[2] - bounding_box[0])/2, (bounding_box[3] - bounding_box[1])/2]
+            new_image_segmentation.add_segmentation(centre_point[0] - factor * half_dimensions[0],
+                                                    centre_point[1] - factor * half_dimensions[1],
+                                                    centre_point[0] + factor * half_dimensions[0],
+                                                    centre_point[1] + factor * half_dimensions[1]
+                                                    )
+
+        return new_image_segmentation
 
 
 class InvalidSegmentError(Exception):

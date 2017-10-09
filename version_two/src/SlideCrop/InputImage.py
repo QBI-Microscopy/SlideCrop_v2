@@ -23,6 +23,13 @@ class InputImage(object):
         """
         raise NotImplementedError( "Method not implemented, but is in the InputImage interface" )
 
+    def get_filename(self):
+        """
+        :return: the string filename of the image.  
+        """
+        raise NotImplementedError( "Method not implemented, but is in the InputImage interface" )
+
+
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=-1):
         """
         :param region: array of the form [x1, y1, x2, y2] for the 2D subregion desired. -1 implies the whole of 2D. 

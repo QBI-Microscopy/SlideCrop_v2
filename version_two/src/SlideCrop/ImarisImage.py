@@ -23,6 +23,12 @@ class ImarisImage(InputImage):
         # will be defined as self.segmentation_resolution
         self.segment_resolution = self._set_segmentation_res()  # resolution level to be used for segmentation
 
+    def get_filename(self):
+        """
+        :return: the string filename of the image.  
+        """
+        return self.filename
+
     # noinspection PyIncorrectDocstring
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=[]):
         """
