@@ -49,6 +49,30 @@ class ImageSegmentation(object):
         """
         return self.get_scaled_segments(1,1);
 
+    def get_max_segment(self):
+        """
+        :return: Returns the segment [x1, y1, x2, y2] with the largest area
+        """
+        max_segment = self.segments[0]
+        max_area = self.segment_area(max_segment)
+
+        for segment in self.segments:
+            segment_area = self.segment_area(segment)
+            if segment_area > max_area:
+                max_segment = segment
+                max_area = segment_area
+
+        return max_segment
+
+
+    def segment_area(self, segment):
+        """
+        :param segment: Bounding box of form [x1, y1, x2, y2] 
+        :return: area of bounding box
+        """
+        return (segment[0] - segment[2]) * (segment[1] - segment[3])
+
+
 
 class InvalidSegmentError(Exception):
     pass

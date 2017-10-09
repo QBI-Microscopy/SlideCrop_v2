@@ -8,6 +8,15 @@ BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used 
 SENSITIVITY_THRESHOLD = .05
 ITERATIONS = 2
 
+# Max area of a slice for it to be still considered noise
+MAX_NOISE_AREA = 1000
+
+# How close in both directions a slice can be to another to be considered the same image
+DELTAY = 50
+DELTAX = 20
+
+# TODO: change x and y (they're actually the wrong way around) (can do from slice objects)
+# TODO: consider resizing from constants (3000 x 1200)
 
 class ImageSegmenter(object):
     """
@@ -15,8 +24,9 @@ class ImageSegmenter(object):
     Primary method segment_image() uses the following implementation: 
         1. Thresholding the image to find a binary image through a k means clustering on the histogram. 
         2. Morpological opening(erosion then dilation) for noise reduction
-         and detail blurring. 
-        3. 
+         and detail blurring (& joining relevant pixels back together) . 
+        3. Detect bounding boxes for connected foreground pixels
+        4. Get image bound box by reconstructing sub-boxes (those from step 3) 
     """
 
     @staticmethod
@@ -27,9 +37,14 @@ class ImageSegmenter(object):
          where c >=1
         :return: an ImageSegmentation object 
         """
+        # Step 1
         binary_image = ImageSegmenter._threshold_image(misc.imresize(image_array, size=(3000, 1200)), K_Clusters)
+
+        # Step 2
         opened_image = ImageSegmenter._image_dilation(binary_image)
         closed_image = ImageSegmenter._noise_reduction(opened_image)
+
+        # Step 3&4
         return ImageSegmenter._apply_object_detection(closed_image)
 
     @staticmethod
@@ -52,7 +67,7 @@ class ImageSegmenter(object):
         :return: True if the image parameter has black foreground images on a light background, false otherwise. 
         """
         mean_background_vector = ImageSegmenter._background_average_vector(image)
-        return (mean_background_vector > 127)
+        return (mean_background_vector > 127) # light background => dark foreground objects
 
     @staticmethod
     def _background_average_vector(image):
@@ -62,22 +77,21 @@ class ImageSegmenter(object):
         x_dim = image.shape[0]
         y_dim = image.shape[1]
 
-        background_index_x_list = []
-        background_index_y_list = []
+        background_corner_index_x_list = []
+        background_corner_index_y_list = []
 
         # Add indices for each corner of the image
         for i in range(BGPCOUNT):
-            background_index_x_list.append(i);
-            background_index_y_list.append(i);
-            background_index_x_list.append(x_dim - (i + 1));
-            background_index_y_list.append(y_dim - (i + 1));
+            background_corner_index_x_list.append(i);
+            background_corner_index_y_list.append(i);
+            background_corner_index_x_list.append(x_dim - (i + 1));
+            background_corner_index_y_list.append(y_dim - (i + 1));
 
         if image.ndim == 3:
-            # Create a image vector with pixel values from the 2D corners of all channels. Used as a background intensity mean.
-            background_vector = image[background_index_x_list, background_index_y_list, :]
+            background_vector = image[background_corner_index_x_list, background_corner_index_y_list, :]
             return np.mean(np.mean(background_vector, axis=1), axis=0)
         else:
-            background_vector = image[background_index_x_list, background_index_y_list]
+            background_vector = image[background_corner_index_x_list, background_corner_index_y_list]
             return np.mean(background_vector)
 
     @staticmethod
@@ -102,8 +116,6 @@ class ImageSegmenter(object):
         y_dim = image.shape[1]
 
         if image.ndim == 3:
-            # Find mean intensity for each channel
-            # Averaged across axis separately. Shape = (x,y,3) -> (x -> 3) -> (1,3)
             channel_mean_vector = np.mean(np.mean(image, axis=1), axis=0)
 
             background_channel_mean_vector = ImageSegmenter._background_average_vector(image)
@@ -170,6 +182,8 @@ class ImageSegmenter(object):
         :param channel_image: 2D image array
         :return: a binary image of the median threshold from cluster_vector
         """
+
+        # Using 2nd index of 10 clusters for foreground (index found through testing)
         if (darkObjects):
             binary_threshold = cluster_vector[-2]
             return 255 - (255 * (channel_image > binary_threshold).round())
@@ -177,28 +191,6 @@ class ImageSegmenter(object):
         else:
             binary_threshold = cluster_vector[1]
             return 255 * (channel_image > binary_threshold).round()
-
-    @staticmethod
-    def _apply_morphological_opening(binary_image):
-        """
-        Applies morphological opening to the binary_image to reduce noise. 
-        :param binary_image: image to be opened.
-        :return: A new binary image that has undergone opening. 
-        """
-        struct_size = int(min(binary_image.shape) * 0.005)
-        structure = np.ones((struct_size, struct_size))
-        return ndimage.binary_opening(binary_image, structure=structure, iterations=ITERATIONS).astype(np.int)
-
-    @staticmethod
-    def _apply_morphological_closing(binary_image):
-        """
-        Applies morphological closing to the binary_image to increase size of the foreground objects
-        :param binary_image: image to be opened.
-        :return: A new binary image that has undergone opening. 
-        """
-        struct_size = int(min(binary_image.shape) * 0.005)
-        structure = np.ones((struct_size, struct_size))
-        return ndimage.binary_closing(binary_image, structure=structure, iterations=ITERATIONS).astype(np.int)
 
     def _noise_reduction(binary_image):
         """
@@ -229,38 +221,42 @@ class ImageSegmenter(object):
         """
         segmentations = ImageSegmentation(morphological_image.shape[0], morphological_image.shape[1])
 
+        # Separate objects into separate labelled ints on matrix imlabelled
         imlabeled, num_features = ndimage.measurements.label(morphological_image, output=np.dtype("int"))
-        # sizes = ndimage.sum(morphological_image, imlabeled, range(num_features + 1))
-        # mask_size = sizes < 1000
-        #
-        # # get non-object pixels and set to zero
-        # remove_pixel = mask_size[imlabeled]
         labels = np.unique(imlabeled)
-        # labelled_image, objects = ndimage.label(imlabeled)
-        # label_clean = np.searchsorted(labels, imlabeled)
 
         # Iterate through range and make array of 0, 1, ..., len(labels)
         lab = []
         for i in range(len(labels) - 1):
             lab.append(i + 1)
 
-        objs = ndimage.measurements.find_objects(imlabeled, max_label=len(labels))
 
-        # filter out None values and sort the objs
-        objs = filter(None, objs)
-        objs = sorted(objs)
+        slices = ndimage.measurements.find_objects(imlabeled, max_label=len(labels))
+
+        # filter out None values and sort the slices
+        slices = filter(None, slices)
+        slices = sorted(slices)
 
         #  apply construction of subslices to form larger sized images
-        objs = ImageSegmenter._reconstruct_images_from_slices(objs)
+        slices = ImageSegmenter._reconstruct_images_from_slices(slices)
 
         # add to ImageSegmenter data structure
-        for box in objs:
+        for box in slices:
             ImageSegmenter._add_box_from_slice(box, segmentations)
+
+        # Remove more objects that aren't big enough to be considered full images.
+
+        # Denominator of fraction of biggest image that shouldn't be considered an image
+        fraction = 4
+        biggest_box_area = segmentations.segment_area(segmentations.get_max_segment())
+        for bounding_box in segmentations.segments:
+            if segmentations.segment_area(bounding_box) * fraction < biggest_box_area:
+                segmentations.segments.remove(bounding_box)
 
         ######################### Used for testing purposes only to check segments are correct ########################
         #
-        # for i in range(len(objs)):
-        #     misc.imsave("E:/8crop{}.png".format(str(i)), imlabeled[objs[i]])
+        # for i in range(len(slices)):
+        #     misc.imsave("E:/8crop{}.png".format(str(i)), imlabeled[slices[i]])
         #
 
         return segmentations
@@ -272,9 +268,8 @@ class ImageSegmenter(object):
          bottom corner of a box surrounding an object. 
         :param box: a 2 value tuple of slice objects
         """
-
-        y_slice = box[1]
-        x_slice = box[0]
+        y_slice = box[0]
+        x_slice = box[1]
         segmentation_object.add_segmentation(x_slice.start, y_slice.start, x_slice.stop, y_slice.stop)
 
     @staticmethod
@@ -284,7 +279,7 @@ class ImageSegmenter(object):
         :param s1: slice object tuple
         :return:  True if the area of the bounding box is less than 1000 pixels
         """
-        if (s1[0].stop - s1[0].start) * (s1[1].stop - s1[1].start) < 1000:
+        if (s1[0].stop - s1[0].start) * (s1[1].stop - s1[1].start) < MAX_NOISE_AREA:
             return True
         return False
 
@@ -295,9 +290,6 @@ class ImageSegmenter(object):
         :return: 1 if the intersection of the two regions is not empty (i.e. have common pixels) for a given buffer 
             DELTAX or DELTAX
         """
-        DELTAY = 50
-        DELTAX = 20
-
         if (s1[0].stop + DELTAX < s2[0].start) | (s1[0].start > s2[0].stop + DELTAX):
             return False
         return not (s1[1].stop + DELTAY < s2[1].start) | (s1[1].start > s2[1].stop + DELTAY)
@@ -366,6 +358,4 @@ class ImageSegmenter(object):
             prev_len = curr_len
             curr_len = len(box_slices)
             i = 0
-
-        # TODO: remove more objects that aren't big enough to be considered full images.
         return box_slices
