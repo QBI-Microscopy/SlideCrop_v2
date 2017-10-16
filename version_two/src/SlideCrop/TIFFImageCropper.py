@@ -5,6 +5,14 @@ import scipy.ndimage as ndimage
 import scipy.misc as misc
 import tifffile
 
+#  TODO: need to encode bigtiff requirement
+#  TODO: repackage tiff resolutions into single image with ability to retrieve them
+#  TODO: need to reallign dimension ordering to be more compatible with ImageJ
+#  TODO: look into time bottlenecks.
+#  TODO: consider compression
+
+
+
 class TIFFImageCropper(object):
     """
     Implementation of the ImageCropper interface for the cropping of an inputted image over all dimensions such that the
@@ -31,12 +39,15 @@ class TIFFImageCropper(object):
     #  TODO: check with Liz the format wanted...
     def crop_single_image(input_image, image_segmentation, output_path, box_index):
         ## Create New, empty Tiff file.
-        output_filename  = "{}/{}_{}.tif".format(output_path, input_image.get_name(), box_index)
+        # output_filename  = "{}/{}_{}.tif".format(output_path, input_image.get_name(), box_index)
 
-        for r_lev in range(input_image.get_resolution_levels() -1, -1, -1):
+        for r_lev in range(input_image.get_resolution_levels()):
+            output_filename = "{}/{}_{}.tif".format(output_path, input_image.get_name(), box_index)
+
             ## Create a 3dim image to include all the channels (do we want times as fourth dimension)
             resolution_dimensions = input_image.image_dimensions()[r_lev]
-            segment = image_segmentation.get_scaled_segments(resolution_dimensions[1], resolution_dimensions[0])[box_index]
+            image_segmentation1 = image_segmentation # image_segmentation.handle_shift_factor(resolution_dimensions[1], resolution_dimensions[0])
+            segment = image_segmentation1.get_scaled_segments(resolution_dimensions[1], resolution_dimensions[0])[box_index]
 
             # print("new segment box scaled", r_lev)
             # print(segment)
@@ -52,9 +63,20 @@ class TIFFImageCropper(object):
                                                                         y = [segment[1], segment[3]],
                                                                         x = [segment[0], segment[2]])
 
+            print("r = {}, index = {}".format(r_lev, box_index))
+            print("resolution  {} area {}".format(resolution_dimensions, segment))
+            print("for found boxes at 3000x1200 and box {}".format(image_segmentation1.segments[box_index]))
+            print(image_data.shape, image_data.dtype.itemsize)
             ## Append to existing file on all resolutions except resolution = 0
             to_append = r_lev != 0
-            tifffile.imsave(output_filename, data=image_data, append=to_append, software="SlideCrop 2")
+            BIG_TIFF = 2**32-2**25
+            is_big_tiff = (image_data.size * image_data.dtype.itemsize) > BIG_TIFF
+            if(is_big_tiff):
+                print("PRINTING A VERY BIG TIFF")
+            tifffile.imsave(output_filename, data=image_data, append=to_append, bigtiff = is_big_tiff, software="SlideCrop 2")
 
             ## clear memory by removing as many variables as possible
             del image_data
+            print("Dome")
+            print("")
+

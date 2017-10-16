@@ -34,7 +34,7 @@ class ImarisImage(InputImage):
         :return: the image name excluding the filepath associated with it. 
         """
         path = self.filename.split("/")
-        return path[-1]
+        return path[-1][:-4]
 
     # noinspection PyIncorrectDocstring
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=[]):
@@ -54,6 +54,7 @@ class ImarisImage(InputImage):
 
     # noinspection PyUnboundLocalVariable,PyUnboundLocalVariable
     def get_euclidean_subset_in_resolution(self, r, t, c, z, y, x):
+        ### TODO: xyczt is image_j format
         """
         :param r: Resolution Level integer 
         :param c: [c1, c2] of channel range indexing. c2>=c1 
