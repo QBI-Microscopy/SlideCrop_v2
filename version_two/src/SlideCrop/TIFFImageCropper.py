@@ -28,14 +28,19 @@ class TIFFImageCropper(object):
 
 
     @staticmethod
+    #  TODO: check with Liz the format wanted...
     def crop_single_image(input_image, image_segmentation, output_path, box_index):
         ## Create New, empty Tiff file.
-        output_filename  = "{}/{}_{}.tif".format(output_path, input_image.get_filename(), box_index)
+        output_filename  = "{}/{}_{}.tif".format(output_path, input_image.get_name(), box_index)
 
-        for r_lev in range(input_image.get_resolution_levels()):
+        for r_lev in range(input_image.get_resolution_levels() -1, -1, -1):
             ## Create a 3dim image to include all the channels (do we want times as fourth dimension)
             resolution_dimensions = input_image.image_dimensions()[r_lev]
-            segment = image_segmentation.get_scaled_segments(resolution_dimensions[0], resolution_dimensions[1])[box_index]
+            segment = image_segmentation.get_scaled_segments(resolution_dimensions[1], resolution_dimensions[0])[box_index]
+
+            # print("new segment box scaled", r_lev)
+            # print(segment)
+
 
             image_width, image_height, z, c, t = input_image.resolution_dimensions(r_lev)
 
@@ -49,7 +54,7 @@ class TIFFImageCropper(object):
 
             ## Append to existing file on all resolutions except resolution = 0
             to_append = r_lev != 0
-            tifffile.imsave(output_path, data=image_data, append=to_append, software="SlideCrop 2")
+            tifffile.imsave(output_filename, data=image_data, append=to_append, software="SlideCrop 2")
 
             ## clear memory by removing as many variables as possible
             del image_data

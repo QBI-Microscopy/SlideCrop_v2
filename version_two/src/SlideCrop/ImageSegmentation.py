@@ -17,11 +17,11 @@ class ImageSegmentation(object):
         :param x2, y2: bottom-right point of the segment box
         :return: null
         """
-        if (any(value < 0 for value in [x1, y1, x2, y2]) |
-           any(x > self.width for x in [x1, x2]) |
-           any(y > self.height for y in [y1, y2]) |
-                (x1 > x2) | (y1 > y2)):
-           raise InvalidSegmentError()
+        if (any(value < 0 for value in [x1, y1, x2, y2]) | any(x > self.width for x in [x1, x2]) |
+           any(y > self.height for y in [y1, y2]) | (x1 > x2) | (y1 > y2)):
+            print(x1, y1, x2, y2)
+            print(self.width, self.height)
+            raise InvalidSegmentError()
         else:
             self.segments.append([x1, y1, x2, y2])
 

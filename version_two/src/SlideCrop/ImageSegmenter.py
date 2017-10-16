@@ -219,7 +219,7 @@ class ImageSegmenter(object):
         :param morphological_image: Binary image
         :return: A ImageSegmentation object
         """
-        segmentations = ImageSegmentation(morphological_image.shape[0], morphological_image.shape[1])
+        segmentations = ImageSegmentation(1200, 3000) # morphological_image.shape[1], morphological_image.shape[0])
 
         # Separate objects into separate labelled ints on matrix imlabelled
         imlabeled, num_features = ndimage.measurements.label(morphological_image, output=np.dtype("int"))
@@ -242,6 +242,7 @@ class ImageSegmenter(object):
 
         # add to ImageSegmenter data structure
         for box in slices:
+            print(box)
             ImageSegmenter._add_box_from_slice(box, segmentations)
 
         # Remove more objects that aren't big enough to be considered full images.
@@ -254,10 +255,15 @@ class ImageSegmenter(object):
                 segmentations.segments.remove(bounding_box)
 
         ######################### Used for testing purposes only to check segments are correct ########################
-        #
         # for i in range(len(slices)):
-        #     misc.imsave("E:/8crop{}.png".format(str(i)), imlabeled[slices[i]])
+        #     misc.imsave("E:/testingFolder/8crop{}.png".format(str(i)), imlabeled[slices[i]])
+        # print("slices")
+        # print(slices)
         #
+        # print("boxes")
+        # for obj in segmentations.segments:
+        #     print(obj)
+        ################################################################################################################
 
         return segmentations
 

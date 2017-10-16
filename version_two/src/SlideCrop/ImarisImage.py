@@ -29,6 +29,13 @@ class ImarisImage(InputImage):
         """
         return self.filename
 
+    def get_name(self):
+        """
+        :return: the image name excluding the filepath associated with it. 
+        """
+        path = self.filename.split("/")
+        return path[-1]
+
     # noinspection PyIncorrectDocstring
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=[]):
         """
