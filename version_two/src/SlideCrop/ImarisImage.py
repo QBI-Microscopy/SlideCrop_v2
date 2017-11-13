@@ -62,8 +62,9 @@ class ImarisImage(InputImage):
         :param y: [y1, y2] of y dimension indexing.  y2>=y1
         :param z: [z1, z2] of z dimension indexing. z2>=z1
         :param t: [t1, t2] of t dimension indexing. t2>=t1
-        :return: ndarray of up to 5 dimensions for the image data of a given resolution in shape [c,x,y,z,t]
+        :return: ndarray of up to 5 dimensions for the image data of a given resolution in shape [t,c,z,x,y]
         """
+
         for tPoint in range(t[0], t[1]):
             for cLevel in range(c[0], c[1]):
 
@@ -72,17 +73,17 @@ class ImarisImage(InputImage):
 
                 #  if timeSubspace exists, stack the current dataSet, else create timeSubspace
                 if 'time_subspace' in locals():
-                        time_subspace.append(dataset)
+                    time_subspace.append(dataset)
                 else:
                     time_subspace = [dataset]
-
 
             if "subspace" in locals():
                 subspace.append(time_subspace)
             else:
                 subspace = [np.stack(time_subspace)]
-            #del time_subspace
-        return np.stack(subspace)
+                # del time_subspace
+        return np.asarray(subspace)
+        #        return np.moveaxis(subspace, [0,1,2,3,4], [4, 2, 3, 0, 1])
 
     def get_low_res_image(self):
         """
