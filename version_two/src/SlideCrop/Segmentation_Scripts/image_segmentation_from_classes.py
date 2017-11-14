@@ -3,7 +3,7 @@ from version_two.src.SlideCrop.ImageSegmenter import ImageSegmenter as seg
 from version_two.src.SlideCrop.TIFFImageCropper import TIFFImageCropper
 
 def main():
-    FILE = "E:/testdata1/AT8 tg124m 6~B.ims" # "E:/testdata2/170818_APP_1878 UII_BF~B.ims" # "E:/testdata1/AT8 tg124m 6~B.ims" #
+    FILE = "E:/testdata2/170818_APP_1878 UII_BF~B.ims" # "E:/testdata2/170818_APP_1878 UII_BF~B.ims" # "E:/testdata1/AT8 tg124m 6~B.ims" #
     image = I.ImarisImage(FILE)
 
     channelled_image = image.get_multichannel_segmentation_image()
