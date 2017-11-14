@@ -70,20 +70,24 @@ class ImarisImage(InputImage):
 
                 path = "/DataSet/ResolutionLevel {0}/TimePoint {1}/Channel {2}/Data".format(r, tPoint, cLevel)
                 dataset = self.file[path][z[0]:z[1], y[0]:y[1], x[0]:x[1]]
-
+                # dataset = dataset.transpose(2,1,0)
+                dataset = np.expand_dims(dataset, axis= -1)
                 #  if timeSubspace exists, stack the current dataSet, else create timeSubspace
                 if 'time_subspace' in locals():
-                    time_subspace.append(dataset)
-                else:
-                    time_subspace = [dataset]
+                    time_subspace = np.concatenate((time_subspace, dataset), axis = -1)
 
+                else:
+                    time_subspace = dataset
+
+            time_subspace = np.expand_dims(time_subspace, axis=-1)
             if "subspace" in locals():
-                subspace.append(time_subspace)
+                subspace = np.concatenate((subspace, time_subspace), axis = -1)
             else:
-                subspace = [np.stack(time_subspace)]
-                # del time_subspace
-        return np.asarray(subspace)
-        #        return np.moveaxis(subspace, [0,1,2,3,4], [4, 2, 3, 0, 1])
+                subspace = time_subspace
+
+        print(subspace.shape)
+        return np.swapaxes(subspace, 0,2)
+
 
     def get_low_res_image(self):
         """
