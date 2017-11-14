@@ -29,6 +29,13 @@ class InputImage(object):
         """
         raise NotImplementedError( "Method not implemented, but is in the InputImage interface" )
 
+    @staticmethod
+    def get_extension(file_path):
+        """
+        :return: The extension of the inputted file. 
+        """
+        path_split = file_path.split(".")
+        return path_split[-1]
 
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=-1):
         """

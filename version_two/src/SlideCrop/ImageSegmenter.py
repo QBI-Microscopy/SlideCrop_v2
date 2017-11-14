@@ -242,13 +242,10 @@ class ImageSegmenter(object):
 
         # add to ImageSegmenter data structure
         for box in slices:
-            print(box)
             ImageSegmenter._add_box_from_slice(box, segmentations)
 
-        # Remove more objects that aren't big enough to be considered full images.
-
-        # Denominator of fraction of biggest image that shouldn't be considered an image
-        fraction = 4
+        # Remove objects that aren't big enough to be considered full images.
+        fraction = 4 # if sub images are 4 times smaller than biggest sub image: ignore.
         biggest_box_area = segmentations.segment_area(segmentations.get_max_segment())
         for bounding_box in segmentations.segments:
             if segmentations.segment_area(bounding_box) * fraction < biggest_box_area:
@@ -256,7 +253,7 @@ class ImageSegmenter(object):
 
         ######################### Used for testing purposes only to check segments are correct ########################
         # for i in range(len(slices)):
-        #     misc.imsave("E:/testingFolder/8crop{}.png".format(str(i)), imlabeled[slices[i]])
+        #     misc.imsave("E:/testingFolder/crop{}.png".format(str(i)), imlabeled[slices[i]])
         # print("slices")
         # print(slices)
         #
@@ -334,7 +331,7 @@ class ImageSegmenter(object):
             temp_list = []
             i = 0
             while i < (len(box_slices) - 1):
-                add_this_obj = 1
+                add_this_obj = True
 
                 j = i + 1
                 x1 = box_slices[i][0]
@@ -342,7 +339,7 @@ class ImageSegmenter(object):
                 while (not (x1.stop < x2.start) | (x1.start > x2.stop)) & (j < len(box_slices)):
                     if ImageSegmenter.intersect(box_slices[i], box_slices[j]):
                         temp_list.append(ImageSegmenter.add(box_slices.pop(j), box_slices.pop(i)))
-                        add_this_obj = 0
+                        add_this_obj = False
                         j = len(box_slices) + 1
                     else:
                         j += 1

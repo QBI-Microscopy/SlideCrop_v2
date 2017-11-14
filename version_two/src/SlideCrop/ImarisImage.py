@@ -70,9 +70,8 @@ class ImarisImage(InputImage):
 
                 path = "/DataSet/ResolutionLevel {0}/TimePoint {1}/Channel {2}/Data".format(r, tPoint, cLevel)
                 dataset = self.file[path][z[0]:z[1], y[0]:y[1], x[0]:x[1]]
-                # dataset = dataset.transpose(2,1,0)
                 dataset = np.expand_dims(dataset, axis= -1)
-                #  if timeSubspace exists, stack the current dataSet, else create timeSubspace
+
                 if 'time_subspace' in locals():
                     time_subspace = np.concatenate((time_subspace, dataset), axis = -1)
 
@@ -85,7 +84,6 @@ class ImarisImage(InputImage):
             else:
                 subspace = time_subspace
 
-        print(subspace.shape)
         return np.swapaxes(subspace, 0,2)
 
 
