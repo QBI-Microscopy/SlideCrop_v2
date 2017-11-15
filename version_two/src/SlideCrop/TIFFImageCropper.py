@@ -8,9 +8,11 @@ from  skimage.io import MultiImage
 import PIL.Image as Image
 from PIL.TiffImagePlugin import AppendingTiffWriter as TIFF
 import PIL.TiffImagePlugin as TIFFPlugin
+import logging
 
 from multiprocessing import Process
 import version_two.src.SlideCrop.ImarisImage as I
+
 
 #  TODO: Enable time and z dimension images
 #  TODO: Fix "OverflowError: size does not fit in an int" from PIL dimensions sizes
@@ -25,6 +27,7 @@ class TIFFImageCropper(object):
     Implementation of the ImageCropper interface for the cropping of an inputted image over all dimensions such that the
     ImageSegmentation object applies to each x-y plane and the output is in TIFF format. 
     """
+
     @staticmethod
     def crop_input_images(input_path, image_segmentation, output_path):
         """
@@ -46,14 +49,14 @@ class TIFFImageCropper(object):
 
         ## Iterate through each bounding box
         for box_index in range(len(image_segmentation.segments)):
-            crop_process = Process(target=TIFFImageCropper.crop_single_image, args=(input_path, image_segmentation, image_folder, box_index))
+            crop_process = Process(target=TIFFImageCropper.crop_single_image,
+                                   args=(input_path, image_segmentation, image_folder, box_index))
             pid_list.append(crop_process)
             crop_process.start()
             # proc.join()  # Uncomment these two lines to allow single processing of ROIs. When commented
         # return           # the program will give individual processes a ROI each: multiprocessing to use more CPU.
         for proc in pid_list:
             proc.join()
-
 
     @staticmethod
     def crop_single_image(input_path, image_segmentation, output_path, box_index):
@@ -67,7 +70,6 @@ class TIFFImageCropper(object):
 
         for r_lev in range(input_image.get_resolution_levels()):
             resolution_output_filename = "{}/{}_{}.tiff".format(output_folder, input_image.get_name(), r_lev)
-            single_resolution_image_paths.append(resolution_output_filename)
 
             # Get appropriately scaled ROI for the given dimension.
             resolution_dimensions = input_image.image_dimensions()[r_lev]
@@ -86,10 +88,13 @@ class TIFFImageCropper(object):
                                                                         x=[segment[0], segment[2]])
 
             # Saves the image as a single RGB TIFF.
-            TIFFImageCropper.save_image(image_data, resolution_output_filename)
+            if TIFFImageCropper.save_image(image_data, resolution_output_filename):
+                single_resolution_image_paths.append(resolution_output_filename)
 
         # Create multipage TIFF image from those created above.
-        TIFFImageCropper.combine_resolutions("{}/{}_full.tiff".format(output_folder, input_image.get_name()), single_resolution_image_paths)
+        TIFFImageCropper.combine_resolutions("{}/{}_full.tiff".format(output_folder, input_image.get_name()),
+                                             single_resolution_image_paths)
+        logging.info("Finished saving image %d from %s.", box_index, input_path)
 
     @staticmethod
     def combine_resolutions(combined_image_path, image_paths_list):
@@ -107,7 +112,7 @@ class TIFFImageCropper(object):
                     tf.newFrame()
                     im.close()
                 except Exception as e:
-                    print(e.with_traceback())
+                    logging.info("Could not create multi-page TIFF. Couldn't compile file: %s", tiff_path)
 
     @staticmethod
     def save_image(image_data, output_filename):
@@ -115,13 +120,19 @@ class TIFFImageCropper(object):
         Saves all channels of an image into a RGB 2D image in TIFF Format. 
         :param image_data: Euclidean data in form [x,y,z,c,t]
         :param output_filename: Filename to save to. Assumed to be valid. 
+        @:return: True if image successfully saved. 
         """
+
         try:
-            im = Image.fromarray(image_data[:, :, 0, :, 0], mode="RGB") #   Ignore time and Z planes, create RGB plan image
+            im = Image.fromarray(image_data[:, :, 0, :, 0],
+                                 mode="RGB")  # Ignore time and Z planes, create RGB plan image
         except Exception as e:
-            pass
+            logging.error("Error occured when transforming numpy data to image. Meant to output to: %s. \n"
+                          "image data is of dimensions %s and size %d", e, image_data.shape, image_data.size)
+            return False
         im.save(output_filename, "TIFF")
         im.close()
+        return True
 
     @staticmethod
     def save_image_2(output_filename, image_data):
@@ -129,4 +140,4 @@ class TIFFImageCropper(object):
         Deprecetated Tiff saving method. Tifffile iterates through first dimension (in our case x) and saves one at a
         time. Obviously this cannot work with the image sizes in question. 
         """
-        tifffile.imsave(output_filename, data = image_data, append = False, bigtiff = True, software="SlideCrop 2")
+        tifffile.imsave(output_filename, data=image_data, append=False, bigtiff=True, software="SlideCrop 2")

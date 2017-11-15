@@ -2,18 +2,26 @@ from .ImageSegmentation import ImageSegmentation
 import numpy as np
 import scipy.ndimage as ndimage
 import scipy.misc as misc
+import logging
 
 K_Clusters = 10
-BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used in the image corners.
-SENSITIVITY_THRESHOLD = .05
-ITERATIONS = 2
+BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used in the image corners to be considered
+               # background
 
-# Max area of a slice for it to be still considered noise
+SENSITIVITY_THRESHOLD = .05 # Sensitivity for K means iterating. smaller threshold means a more accurate threshold.
+
+
+# Max area (pixels) of a slice for it to be still considered noise
 MAX_NOISE_AREA = 1000
 
 # How close in both directions a slice can be to another to be considered the same image
 DELTAY = 50
 DELTAX = 20
+
+# Size of image to use when segmenting the image.
+IMAGEX = 1200
+IMAGEY = 3000
+
 
 # TODO: change x and y (they're actually the wrong way around) (can do from slice objects)
 # TODO: consider resizing from constants (3000 x 1200)
@@ -38,7 +46,7 @@ class ImageSegmenter(object):
         :return: an ImageSegmentation object 
         """
         # Step 1
-        binary_image = ImageSegmenter._threshold_image(misc.imresize(image_array, size=(3000, 1200)), K_Clusters)
+        binary_image = ImageSegmenter._threshold_image(misc.imresize(image_array, size=(IMAGEY, IMAGEX)), K_Clusters)
 
         # Step 2
         opened_image = ImageSegmenter._image_dilation(binary_image)
@@ -67,7 +75,7 @@ class ImageSegmenter(object):
         :return: True if the image parameter has black foreground images on a light background, false otherwise. 
         """
         mean_background_vector = ImageSegmenter._background_average_vector(image)
-        return (mean_background_vector > 127) # light background => dark foreground objects
+        return (mean_background_vector > 127)  # light background => dark foreground objects
 
     @staticmethod
     def _background_average_vector(image):
@@ -112,9 +120,6 @@ class ImageSegmenter(object):
         :param image: 3Darray image of a 2D image with multiple channels
         :return: a 2Darray of the image from the best channel
         """
-        x_dim = image.shape[0]
-        y_dim = image.shape[1]
-
         if image.ndim == 3:
             channel_mean_vector = np.mean(np.mean(image, axis=1), axis=0)
 
@@ -219,7 +224,7 @@ class ImageSegmenter(object):
         :param morphological_image: Binary image
         :return: A ImageSegmentation object
         """
-        segmentations = ImageSegmentation(1200, 3000) # morphological_image.shape[1], morphological_image.shape[0])
+        segmentations = ImageSegmentation(IMAGEX, IMAGEY)
 
         # Separate objects into separate labelled ints on matrix imlabelled
         imlabeled, num_features = ndimage.measurements.label(morphological_image, output=np.dtype("int"))
@@ -229,7 +234,6 @@ class ImageSegmenter(object):
         lab = []
         for i in range(len(labels) - 1):
             lab.append(i + 1)
-
 
         slices = ndimage.measurements.find_objects(imlabeled, max_label=len(labels))
 
@@ -245,7 +249,7 @@ class ImageSegmenter(object):
             ImageSegmenter._add_box_from_slice(box, segmentations)
 
         # Remove objects that aren't big enough to be considered full images.
-        fraction = 4 # if sub images are 4 times smaller than biggest sub image: ignore.
+        fraction = 4  # if sub images are 4 times smaller than biggest sub image: ignore.
         biggest_box_area = segmentations.segment_area(segmentations.get_max_segment())
         for bounding_box in segmentations.segments:
             if segmentations.segment_area(bounding_box) * fraction < biggest_box_area:
@@ -254,15 +258,13 @@ class ImageSegmenter(object):
         ######################### Used for testing purposes only to check segments are correct ########################
         # for i in range(len(slices)):
         #     misc.imsave("E:/testingFolder/crop{}.png".format(str(i)), imlabeled[slices[i]])
-        # print("slices")
-        # print(slices)
-        #
-        # print("boxes")
-        # for obj in segmentations.segments:
-        #     print(obj)
         ################################################################################################################
 
-        return segmentations
+        logging.info("boxes created: ")
+        for obj in segmentations.segments:
+            logging.info("%s", obj)
+
+        return segmentations.change_segment_bounds(1.1)
 
     @staticmethod
     def _add_box_from_slice(box, segmentation_object):
@@ -330,12 +332,16 @@ class ImageSegmenter(object):
 
             temp_list = []
             i = 0
+
+            #  Iterate through all slices in the list.
             while i < (len(box_slices) - 1):
                 add_this_obj = True
 
                 j = i + 1
                 x1 = box_slices[i][0]
                 x2 = box_slices[j][0]
+
+                #  Since sorted, iterate through all boxes with intersecting x until box i is past box j
                 while (not (x1.stop < x2.start) | (x1.start > x2.stop)) & (j < len(box_slices)):
                     if ImageSegmenter.intersect(box_slices[i], box_slices[j]):
                         temp_list.append(ImageSegmenter.add(box_slices.pop(j), box_slices.pop(i)))
@@ -348,13 +354,16 @@ class ImageSegmenter(object):
                         else:
                             j = len(box_slices)
 
+                # Only add to iterative list if it does not intersect with any of the boxes.
                 if add_this_obj:
                     temp_list.append(box_slices[i])
                     i += 1
 
+            # Correct for last object not being iterated over
             if len(box_slices) != 0:
                 temp_list.append(box_slices[-1])
 
+            #  re-sort
             box_slices = sorted(temp_list.copy())
             del temp_list
 

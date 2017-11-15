@@ -1,4 +1,11 @@
 import numpy as np
+import logging
+
+x1 = 0
+x2 = 2
+
+y1 = 1
+y2 = 3
 
 
 class ImageSegmentation(object):
@@ -21,8 +28,7 @@ class ImageSegmentation(object):
         """
         if (any(value < 0 for value in [x1, y1, x2, y2]) | any(x > self.width for x in [x1, x2]) |
                 any(y > self.height for y in [y1, y2]) | (x1 > x2) | (y1 > y2)):
-            print(x1, y1, x2, y2)
-            print(self.width, self.height)
+            logging.error("Invalid image segment: %s of image sized %s", (x1, y1, x2, y2), (self.width, self.height))
             raise InvalidSegmentError()
         else:
             self.segments.append([x1, y1, x2, y2])
@@ -38,15 +44,15 @@ class ImageSegmentation(object):
         matrix = np.array(self.segments)[:]
 
         # column multiplication of columns 0 & 2 by width/self.width
-        matrix[:, [0, 2]] = np.multiply(matrix[:, [0, 2]], (width / self.width))
+        matrix[:, [x1, x2]] = np.multiply(matrix[:, [x1, x2]], (width / self.width))
 
         # same for y axis columns 1 & 3. Multiply by height/self.height
-        matrix[:, [1, 3]] = np.multiply(matrix[:, [1, 3]], (height / self.height))
+        matrix[:, [y1, y2]] = np.multiply(matrix[:, [y1, y2]], (height / self.height))
         return matrix
 
     def get_relative_segments(self):
         """
-        :return: An array of segment boxes without scaling.  0<= x, y <=1. 
+        :return: An array of segment boxes without scaling.  x1<= x, y <=1. 
         """
         return self.get_scaled_segments(1, 1)
 
@@ -70,7 +76,7 @@ class ImageSegmentation(object):
         :param segment: Bounding box of form [x1, y1, x2, y2] 
         :return: area of bounding box
         """
-        return (segment[0] - segment[2]) * (segment[1] - segment[3])
+        return (segment[x2] - segment[x1]) * (segment[y2] - segment[y1])
 
     def handle_shift_factor(self, height, width):
         new_image_segmentation = ImageSegmentation(self.width, self.height)
@@ -78,21 +84,21 @@ class ImageSegmentation(object):
             y = 1 - (self.height / height) / 100
             x = 1 - (self.width / width) / 100
 
-            new_image_segmentation.add_segmentation(min(int(bounding_box[0] * x),self.width), min(int(bounding_box[1] * y), self.height),
-                                                    min(int(bounding_box[2] * x), self.width), min(int(bounding_box[3] * y), self.height))
+            new_image_segmentation.add_segmentation(min(int(bounding_box[x1] * x),self.width), min(int(bounding_box[y1] * y), self.height),
+                                                    min(int(bounding_box[x2] * x), self.width), min(int(bounding_box[y2] * y), self.height))
 
         return new_image_segmentation
 
     def change_segment_bounds(self, factor):
         """
-        :param factor: a float value dictating the change in bounding box size. 
+        :param factor: a float value dictating the change in bounding box size. Factor > 1 increases the ROI
         :return: an ImageSegmentation object with bounding boxes increased/decreased by the given factor
         """
         new_image_segmentation = ImageSegmentation(self.width, self.height)
         for bounding_box in self.segments:
-            centre_point = [(bounding_box[0] + bounding_box[2]) / 2, (bounding_box[1] + bounding_box[3]) / 2]
-            half_dimensions = [(bounding_box[2] - bounding_box[0]) / 2, (bounding_box[3] - bounding_box[1]) / 2]
-            new_image_segmentation.add_segmentation(int(centre_point[0] - factor * half_dimensions[0]) // 1,
+            centre_point = [(bounding_box[x1] + bounding_box[x2]) / 2, (bounding_box[y1] + bounding_box[y2]) / 2]
+            half_dimensions = [(bounding_box[x2] - bounding_box[x1]) / 2, (bounding_box[y2] - bounding_box[y1]) / 2]
+            new_image_segmentation.add_segmentation(int(centre_point[0] - factor * half_dimensions[0]),
                                                     int(centre_point[1] - factor * half_dimensions[1]),
                                                     int(centre_point[0] + factor * half_dimensions[0]),
                                                     int(centre_point[1] + factor * half_dimensions[1]))
