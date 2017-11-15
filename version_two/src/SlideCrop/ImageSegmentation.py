@@ -1,11 +1,11 @@
 import numpy as np
 import logging
 
-x1 = 0
-x2 = 2
+X1 = 0
+X2 = 2
 
-y1 = 1
-y2 = 3
+Y1 = 1
+Y2 = 3
 
 
 class ImageSegmentation(object):
@@ -44,10 +44,10 @@ class ImageSegmentation(object):
         matrix = np.array(self.segments)[:]
 
         # column multiplication of columns 0 & 2 by width/self.width
-        matrix[:, [x1, x2]] = np.multiply(matrix[:, [x1, x2]], (width / self.width))
+        matrix[:, [X1, X2]] = np.multiply(matrix[:, [X1, X2]], (width / self.width))
 
         # same for y axis columns 1 & 3. Multiply by height/self.height
-        matrix[:, [y1, y2]] = np.multiply(matrix[:, [y1, y2]], (height / self.height))
+        matrix[:, [Y1, Y2]] = np.multiply(matrix[:, [Y1, Y2]], (height / self.height))
         return matrix
 
     def get_relative_segments(self):
@@ -76,7 +76,7 @@ class ImageSegmentation(object):
         :param segment: Bounding box of form [x1, y1, x2, y2] 
         :return: area of bounding box
         """
-        return (segment[x2] - segment[x1]) * (segment[y2] - segment[y1])
+        return (segment[X2] - segment[X1]) * (segment[Y2] - segment[Y1])
 
     def handle_shift_factor(self, height, width):
         new_image_segmentation = ImageSegmentation(self.width, self.height)
@@ -84,8 +84,8 @@ class ImageSegmentation(object):
             y = 1 - (self.height / height) / 100
             x = 1 - (self.width / width) / 100
 
-            new_image_segmentation.add_segmentation(min(int(bounding_box[x1] * x),self.width), min(int(bounding_box[y1] * y), self.height),
-                                                    min(int(bounding_box[x2] * x), self.width), min(int(bounding_box[y2] * y), self.height))
+            new_image_segmentation.add_segmentation(min(int(bounding_box[X1] * x),self.width), min(int(bounding_box[Y1] * y), self.height),
+                                                    min(int(bounding_box[X2] * x), self.width), min(int(bounding_box[Y2] * y), self.height))
 
         return new_image_segmentation
 
@@ -96,13 +96,13 @@ class ImageSegmentation(object):
         """
         new_image_segmentation = ImageSegmentation(self.width, self.height)
         for bounding_box in self.segments:
-            centre_point = [(bounding_box[x1] + bounding_box[x2]) / 2, (bounding_box[y1] + bounding_box[y2]) / 2]
-            half_dimensions = [(bounding_box[x2] - bounding_box[x1]) / 2, (bounding_box[y2] - bounding_box[y1]) / 2]
-            new_image_segmentation.add_segmentation(int(centre_point[0] - factor * half_dimensions[0]),
-                                                    int(centre_point[1] - factor * half_dimensions[1]),
-                                                    int(centre_point[0] + factor * half_dimensions[0]),
-                                                    int(centre_point[1] + factor * half_dimensions[1]))
-
+            centre_point = [(bounding_box[X1] + bounding_box[X2]) / 2, (bounding_box[Y1] + bounding_box[Y2]) / 2]
+            half_dimensions = [(bounding_box[X2] - bounding_box[X1]) / 2, (bounding_box[Y2] - bounding_box[Y1]) / 2]
+            x1 = max(int(centre_point[0] - factor * half_dimensions[0]), 0)
+            y1 = max(int(centre_point[1] - factor * half_dimensions[1]), 0)
+            x2 = min(int(centre_point[0] + factor * half_dimensions[0]), self.width)
+            y2 = min(int(centre_point[1] + factor * half_dimensions[1]), self.height)
+            new_image_segmentation.add_segmentation(x1, y1, x2, y2)
         return new_image_segmentation
 
 

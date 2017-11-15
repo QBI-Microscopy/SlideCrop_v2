@@ -1,17 +1,13 @@
 import os
-from version_two.src.SlideCrop.ImageSegmentation import ImageSegmentation as ImageSegmentation
-import numpy as np
-import scipy.ndimage as ndimage
-import scipy.misc as misc
 import tifffile
-from  skimage.io import MultiImage
 import PIL.Image as Image
 from PIL.TiffImagePlugin import AppendingTiffWriter as TIFF
-import PIL.TiffImagePlugin as TIFFPlugin
 import logging
 
 from multiprocessing import Process
 import version_two.src.SlideCrop.ImarisImage as I
+
+DEFAULT_LOGGING_FILEPATH = "E:/SlideCropperLog.txt"
 
 
 #  TODO: Enable time and z dimension images
@@ -19,6 +15,13 @@ import version_two.src.SlideCrop.ImarisImage as I
 #  TODO: Fix missing dimensions for ImageJ. Currently T and Z have been removed, but this makes ImageJ interprete
 #  each resolution as a time dimension, which than tries to allocate res_levels * max dimensions of memory.
 #   TODO: Channels > 3
+
+#   TODO: What is the maximum number of processes usable at once to stop MemoryError's
+"""
+psutil.virtual_memory() will give a memory overview: 
+    available: how much can a process get without page faults on lower APIs
+    
+"""
 
 
 
@@ -60,6 +63,9 @@ class TIFFImageCropper(object):
 
     @staticmethod
     def crop_single_image(input_path, image_segmentation, output_path, box_index):
+        logging.basicConfig(filename=DEFAULT_LOGGING_FILEPATH, level=logging.DEBUG)
+        logging.captureWarnings(True)
+
         input_image = I.ImarisImage(input_path)
 
         output_folder = "{}/ind{}".format(output_path, box_index)  # come up with better format
@@ -80,6 +86,7 @@ class TIFFImageCropper(object):
             image_width, image_height, z, c, t = input_image.resolution_dimensions(r_lev)
 
             # image data with dimensions [c,x,y,z,t]
+            #  TODO: check if enough memory on computer to load into disk
             image_data = input_image.get_euclidean_subset_in_resolution(r=r_lev,
                                                                         t=[0, t],
                                                                         c=[0, c],
@@ -90,6 +97,7 @@ class TIFFImageCropper(object):
             # Saves the image as a single RGB TIFF.
             if TIFFImageCropper.save_image(image_data, resolution_output_filename):
                 single_resolution_image_paths.append(resolution_output_filename)
+            del image_data
 
         # Create multipage TIFF image from those created above.
         TIFFImageCropper.combine_resolutions("{}/{}_full.tiff".format(output_folder, input_image.get_name()),
@@ -125,7 +133,7 @@ class TIFFImageCropper(object):
 
         try:
             im = Image.fromarray(image_data[:, :, 0, :, 0],
-                                 mode="RGB")  # Ignore time and Z planes, create RGB plan image
+                                 mode="RGB")  # Ignore time and Z planes, create RGB plane image
         except Exception as e:
             logging.error("Error occured when transforming numpy data to image. Meant to output to: %s. \n"
                           "image data is of dimensions %s and size %d", e, image_data.shape, image_data.size)
