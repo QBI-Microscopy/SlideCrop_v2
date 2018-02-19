@@ -5,3 +5,4 @@ libtiff.dll
 .DS_Store
 .idea/
 *.jpg
+*.xml
