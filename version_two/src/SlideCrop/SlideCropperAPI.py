@@ -7,7 +7,7 @@ from version_two.src.SlideCrop.InputImage import InputImage
 import os
 
 DEFAULT_LOGGING_FILEPATH = "E:/SlideCropperLog.txt"
-
+FORMAT = '|%(thread)d |%(filename)s |%(funcName)s |%(lineno)d ||%(message)s||'
 class SlideCropperAPI(object):
     """
     Main Class for using SlideCropper functionality. All methods are class method based.     
@@ -55,15 +55,18 @@ class SlideCropperAPI(object):
         :param output_path: 
         :return: 
         """
+        logging.info("Starting to crop: {0}".format(file_path))
         ext_check = InputImage.get_extension(file_path)
         if ext_check != "ims":
             raise TypeError("{} is currently not a supported file type".format(ext_check))
 
+
         image = I.ImarisImage(file_path)
         segmentations = ImageSegmenter.segment_image(image.get_multichannel_segmentation_image())
         image.close_file()
-
+        logging.info("Finished Segmenting of image: starting crop.")
         TIFFImageCropper.crop_input_images(file_path, segmentations, output_path)
+        logging.info("Finished Cropping of image.")
 
 def crop_all_from(cls, file_path_list, output_path, concurrent = False):
     """
@@ -89,8 +92,9 @@ def main():
     """
     Standard wrapper for API usage. Sets API up to call innerMain function. 
     """
-    logging.basicConfig(filename=DEFAULT_LOGGING_FILEPATH, level= logging.DEBUG)
+    logging.basicConfig(filename="E:/SlideCropperLog.txt", level= logging.DEBUG, format= FORMAT)
     logging.captureWarnings(True)
+
     parent_pid = os.getpid()
     # Only log for first process created. Must check that process is the original.
     if os.getpid() == parent_pid:
@@ -103,7 +107,8 @@ def innerMain():
     """
     API actions in use. 
     """
-    SlideCropperAPI.crop_all_in_folder("E:/testdata2", "E:/FirstTest")
+
+    SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/18_02_20")
 
 if __name__ == '__main__':
     main()

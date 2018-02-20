@@ -3,6 +3,7 @@ import tifffile
 import PIL.Image as Image
 from PIL.TiffImagePlugin import AppendingTiffWriter as TIFF
 import logging
+import numpy as np
 
 from multiprocessing import Process
 import version_two.src.SlideCrop.ImarisImage as I
@@ -56,15 +57,15 @@ class TIFFImageCropper(object):
                                    args=(input_path, image_segmentation, image_folder, box_index))
             pid_list.append(crop_process)
             crop_process.start()
-            # proc.join()  # Uncomment these two lines to allow single processing of ROIs. When commented
-        # return           # the program will give individual processes a ROI each: multiprocessing to use more CPU.
+            crop_process.join()  # Uncomment these two lines to allow single processing of ROIs. When commented
+        return           # the program will give individual processes a ROI each: multiprocessing to use more CPU.
         for proc in pid_list:
             proc.join()
 
     @staticmethod
     def crop_single_image(input_path, image_segmentation, output_path, box_index):
-        logging.basicConfig(filename=DEFAULT_LOGGING_FILEPATH, level=logging.DEBUG)
-        logging.captureWarnings(True)
+        # logging.basicConfig(filename=DEFAULT_LOGGING_FILEPATH, level=logging.DEBUG)
+        # logging.captureWarnings(True)
 
         input_image = I.ImarisImage(input_path)
 
@@ -94,9 +95,22 @@ class TIFFImageCropper(object):
                                                                         y=[segment[1], segment[3]],
                                                                         x=[segment[0], segment[2]])
 
-            # Saves the image as a single RGB TIFF.
-            if TIFFImageCropper.save_image(image_data, resolution_output_filename):
-                single_resolution_image_paths.append(resolution_output_filename)
+            # Only Save as AppendedTiff
+            with TIFF("{}/{}_full.tiff".format(output_folder, input_image.get_name()), False) as tf:
+                try:
+                    im = Image.fromarray(image_data[:, :, 0, :, 0],
+                                 mode="RGB")
+                    print(im.size)
+                    im.save(tf)
+                    tf.newFrame()
+                    im.close()
+                except Exception as e:
+                    print("Could not create multi-page TIFF. Couldn't compile file: {0}".format(str(e)))
+
+            #
+            # # Saves the image as a single RGB TIFF.
+            # if TIFFImageCropper.save_image(image_data, resolution_output_filename):
+            #     single_resolution_image_paths.append(resolution_output_filename)
             del image_data
 
         # Create multipage TIFF image from those created above.
