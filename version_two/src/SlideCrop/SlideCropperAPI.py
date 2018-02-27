@@ -5,6 +5,13 @@ from version_two.src.SlideCrop.ImageSegmenter import ImageSegmenter
 from version_two.src.SlideCrop.TIFFImageCropper import TIFFImageCropper
 from version_two.src.SlideCrop.InputImage import InputImage
 import os
+from version_two.src.SlideCrop.Config import Config
+
+###
+###  Problem with white background, and grey background connecting
+###  Closeness in black
+###
+###
 
 DEFAULT_LOGGING_FILEPATH = "E:/SlideCropperLog.txt"
 FORMAT = '|%(thread)d |%(filename)s |%(funcName)s |%(lineno)d ||%(message)s||'
@@ -68,6 +75,28 @@ class SlideCropperAPI(object):
         TIFFImageCropper.crop_input_images(file_path, segmentations, output_path)
         logging.info("Finished Cropping of image.")
 
+    @classmethod
+    def segment_single_image(cls, file_path):
+        """
+        Encapsulation method for cropping an individual image.
+        :param file_path: String path to the desired file. Assumed to be .ims extension
+        :param output_path: 
+        :return: 
+        """
+        logging.info("Starting to crop: {0}".format(file_path))
+        ext_check = InputImage.get_extension(file_path)
+        if ext_check != "ims":
+            raise TypeError("{} is currently not a supported file type".format(ext_check))
+
+
+        image = I.ImarisImage(file_path)
+        segmentations = ImageSegmenter.segment_image(image.get_multichannel_segmentation_image())
+        image.close_file()
+        logging.info("Finished Segmenting of image: starting crop.")
+        Config.change_random_number(Config)
+
+
+
 def crop_all_from(cls, file_path_list, output_path, concurrent = False):
     """
     Handler to crop all images in a given list. Will ignore non-compatible file types 
@@ -107,8 +136,22 @@ def innerMain():
     """
     API actions in use. 
     """
+    #
+    # for filename in os.listdir("E:/testdata1"):
+    #     file_path = "E:/testdata1/{0}".format(filename)
+    #     SlideCropperAPI.segment_single_image(file_path)
+    #
+    # for filename in os.listdir("E:/testdata2"):
+    #     file_path = "E:/testdata2/{0}".format(filename)
+    #     SlideCropperAPI.segment_single_image(file_path)
 
-    SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/18_02_20")
+    # for filename in os.listdir("E:/testdata3"):
+    #     file_path = "E:/testdata3/{0}".format(filename)
+    #     SlideCropperAPI.segment_single_image(file_path)
+
+    # SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/threshold")
+    SlideCropperAPI.crop_all_in_folder("E:/testdata2", "E:/threshold")
+    # SlideCropperAPI.crop_all_in_folder("E:/testdata3", "E:/18_02_20   ")
 
 if __name__ == '__main__':
     main()

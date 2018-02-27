@@ -3,8 +3,10 @@ import numpy as np
 import scipy.ndimage as ndimage
 import scipy.misc as misc
 import logging
+from .Config import Config
+import os
 
-K_Clusters = 10
+K_Clusters = 2
 BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used in the image corners to be considered
                # background
 
@@ -47,13 +49,17 @@ class ImageSegmenter(object):
         """
         # Step 1
         binary_image = ImageSegmenter._threshold_image(misc.imresize(image_array, size=(IMAGEY, IMAGEX)), K_Clusters)
+        misc.imsave("{0}/{1}binary.png".format(Config.test_folder, Config.random_number), binary_image)
 
         # Step 2
-        opened_image = ImageSegmenter._image_dilation(binary_image)
-        closed_image = ImageSegmenter._noise_reduction(opened_image)
+        closed_image = ImageSegmenter._noise_reduction(binary_image)
+        misc.imsave("{0}/{1}closed.png".format(Config.test_folder, Config.random_number), closed_image)
 
-        # Step 3&4
-        return ImageSegmenter._apply_object_detection(closed_image)
+        opened_image = ImageSegmenter._image_dilation(closed_image)
+        misc.imsave("{0}/{1}opened.png".format(Config.test_folder, Config.random_number), opened_image)
+
+        # Step 3 & 4
+        return ImageSegmenter._apply_object_detection(opened_image)
 
     @staticmethod
     def _threshold_image(image_array, k):
@@ -190,11 +196,12 @@ class ImageSegmenter(object):
 
         # Using 2nd index of 10 clusters for foreground (index found through testing)
         if (darkObjects):
-            binary_threshold = cluster_vector[-2]
-            return 255 - (255 * (channel_image > binary_threshold).round())
+            binary_threshold = cluster_vector[-1]
+            print(cluster_vector, binary_threshold)
+            return 255 * (channel_image < binary_threshold).round()
 
         else:
-            binary_threshold = cluster_vector[1]
+            binary_threshold = cluster_vector[0]
             return 255 * (channel_image > binary_threshold).round()
 
     def _noise_reduction(binary_image):
@@ -205,7 +212,7 @@ class ImageSegmenter(object):
         """
         struct_size = 3  # max(round(binary_image.size / 8000000), 2)
         structure = np.ones((struct_size, struct_size))
-        return ndimage.binary_erosion(binary_image, structure=structure, iterations=2).astype(np.int)
+        return ndimage.binary_erosion(binary_image.astype(np.int), structure=structure) # , iterations=2).astype(np.int)
 
     def _image_dilation(binary_image):
         """

@@ -1,6 +1,6 @@
 import os
 import tifffile
-import PIL.Image as Image
+from pillow import Image
 from PIL.TiffImagePlugin import AppendingTiffWriter as TIFF
 import logging
 import numpy as np
@@ -114,8 +114,8 @@ class TIFFImageCropper(object):
             del image_data
 
         # Create multipage TIFF image from those created above.
-        TIFFImageCropper.combine_resolutions("{}/{}_full.tiff".format(output_folder, input_image.get_name()),
-                                             single_resolution_image_paths)
+        # TIFFImageCropper.combine_resolutions("{}/{}_full.tiff".format(output_folder, input_image.get_name()),
+        #                                      single_resolution_image_paths)
         logging.info("Finished saving image %d from %s.", box_index, input_path)
 
     @staticmethod
