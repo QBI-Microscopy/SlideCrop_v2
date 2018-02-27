@@ -17,14 +17,6 @@ DEFAULT_LOGGING_FILEPATH = "E:/SlideCropperLog.txt"
 #  each resolution as a time dimension, which than tries to allocate res_levels * max dimensions of memory.
 #   TODO: Channels > 3
 
-#   TODO: What is the maximum number of processes usable at once to stop MemoryError's
-"""
-psutil.virtual_memory() will give a memory overview: 
-    available: how much can a process get without page faults on lower APIs
-    
-"""
-
-
 
 class TIFFImageCropper(object):
     """
@@ -64,16 +56,12 @@ class TIFFImageCropper(object):
 
     @staticmethod
     def crop_single_image(input_path, image_segmentation, output_path, box_index):
-        # logging.basicConfig(filename=DEFAULT_LOGGING_FILEPATH, level=logging.DEBUG)
-        # logging.captureWarnings(True)
 
         input_image = I.ImarisImage(input_path)
 
         output_folder = "{}/ind{}".format(output_path, box_index)  # come up with better format
         if not os.path.isdir(output_folder):
             os.makedirs(output_folder)
-
-        single_resolution_image_paths = []
 
         for r_lev in range(input_image.get_resolution_levels()):
             resolution_output_filename = "{}/{}_{}.tiff".format(output_folder, input_image.get_name(), r_lev)
@@ -98,68 +86,12 @@ class TIFFImageCropper(object):
             # Only Save as AppendedTiff
             with TIFF("{}/{}_full.tiff".format(output_folder, input_image.get_name()), False) as tf:
                 try:
-                    im = Image.fromarray(image_data[:, :, 0, :, 0],
-                                 mode="RGB")
-                    print(im.size)
+                    im = Image.fromarray(image_data[:, :, 0, :, 0], mode="RGB")
                     im.save(tf)
                     tf.newFrame()
                     im.close()
                 except Exception as e:
-                    print("Could not create multi-page TIFF. Couldn't compile file: {0}".format(str(e)))
-
-            #
-            # # Saves the image as a single RGB TIFF.
-            # if TIFFImageCropper.save_image(image_data, resolution_output_filename):
-            #     single_resolution_image_paths.append(resolution_output_filename)
+                    logging.error("Could not create multi-page TIFF. Couldn't compile file: {0}".format(str(e)))
             del image_data
-
-        # Create multipage TIFF image from those created above.
-        # TIFFImageCropper.combine_resolutions("{}/{}_full.tiff".format(output_folder, input_image.get_name()),
-        #                                      single_resolution_image_paths)
         logging.info("Finished saving image %d from %s.", box_index, input_path)
 
-    @staticmethod
-    def combine_resolutions(combined_image_path, image_paths_list):
-        """
-        Creates a Multi-paged TIFF file from the fiven image list. 
-        :param combined_image_path: File path to new Multi-page TIFF. Assumed to be valid
-        :param image_paths_list: List of file paths to create the multi-page tiff with. Assumed to be both a valid 
-                                 filepath and a TIFF extension. 
-        """
-        with TIFF(combined_image_path, True) as tf:
-            for tiff_path in image_paths_list:
-                try:
-                    im = Image.open(tiff_path)
-                    im.save(tf)
-                    tf.newFrame()
-                    im.close()
-                except Exception as e:
-                    logging.info("Could not create multi-page TIFF. Couldn't compile file: %s", tiff_path)
-
-    @staticmethod
-    def save_image(image_data, output_filename):
-        """
-        Saves all channels of an image into a RGB 2D image in TIFF Format. 
-        :param image_data: Euclidean data in form [x,y,z,c,t]
-        :param output_filename: Filename to save to. Assumed to be valid. 
-        @:return: True if image successfully saved. 
-        """
-
-        try:
-            im = Image.fromarray(image_data[:, :, 0, :, 0],
-                                 mode="RGB")  # Ignore time and Z planes, create RGB plane image
-        except Exception as e:
-            logging.error("Error occured when transforming numpy data to image. Meant to output to: %s. \n"
-                          "image data is of dimensions %s and size %d", e, image_data.shape, image_data.size)
-            return False
-        im.save(output_filename, "TIFF")
-        im.close()
-        return True
-
-    @staticmethod
-    def save_image_2(output_filename, image_data):
-        """
-        Deprecetated Tiff saving method. Tifffile iterates through first dimension (in our case x) and saves one at a
-        time. Obviously this cannot work with the image sizes in question. 
-        """
-        tifffile.imsave(output_filename, data=image_data, append=False, bigtiff=True, software="SlideCrop 2")

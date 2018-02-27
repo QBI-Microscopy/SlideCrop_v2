@@ -4,26 +4,15 @@ import scipy.ndimage as ndimage
 import scipy.misc as misc
 import logging
 from .Config import Config
-import os
 
 K_Clusters = 2
 BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used in the image corners to be considered
                # background
-
 SENSITIVITY_THRESHOLD = .05 # Sensitivity for K means iterating. smaller threshold means a more accurate threshold.
+MAX_NOISE_AREA = 1000   # Max area (pixels) of a slice for it to be still considered noise
 
-
-# Max area (pixels) of a slice for it to be still considered noise
-MAX_NOISE_AREA = 1000
-
-# How close in both directions a slice can be to another to be considered the same image
-DELTAY = 50
-DELTAX = 20
-
-# Size of image to use when segmenting the image.
-IMAGEX = 1200
-IMAGEY = 3000
-
+DELTAX, DELTAY = (20, 50) # How close in both directions a slice can be to another to be considered the same image
+IMAGEX, IMAGEY = (3000, 1200) # Size of image to use when segmenting the image.
 
 # TODO: change x and y (they're actually the wrong way around) (can do from slice objects)
 # TODO: consider resizing from constants (3000 x 1200)
@@ -49,14 +38,10 @@ class ImageSegmenter(object):
         """
         # Step 1
         binary_image = ImageSegmenter._threshold_image(misc.imresize(image_array, size=(IMAGEY, IMAGEX)), K_Clusters)
-        misc.imsave("{0}/{1}binary.png".format(Config.test_folder, Config.random_number), binary_image)
 
         # Step 2
         closed_image = ImageSegmenter._noise_reduction(binary_image)
-        misc.imsave("{0}/{1}closed.png".format(Config.test_folder, Config.random_number), closed_image)
-
         opened_image = ImageSegmenter._image_dilation(closed_image)
-        misc.imsave("{0}/{1}opened.png".format(Config.test_folder, Config.random_number), opened_image)
 
         # Step 3 & 4
         return ImageSegmenter._apply_object_detection(opened_image)
@@ -88,8 +73,7 @@ class ImageSegmenter(object):
         """
         :return: the average background pixel intensity for the four corners of the image in each channel. 
         """
-        x_dim = image.shape[0]
-        y_dim = image.shape[1]
+        x_dim, y_dim = image.shape[0], image.shape[1]
 
         background_corner_index_x_list = []
         background_corner_index_y_list = []
@@ -212,7 +196,7 @@ class ImageSegmenter(object):
         """
         struct_size = 3  # max(round(binary_image.size / 8000000), 2)
         structure = np.ones((struct_size, struct_size))
-        return ndimage.binary_erosion(binary_image.astype(np.int), structure=structure) # , iterations=2).astype(np.int)
+        return ndimage.binary_erosion(binary_image.astype(np.int), structure=structure)
 
     def _image_dilation(binary_image):
         """
@@ -267,10 +251,7 @@ class ImageSegmenter(object):
         #     misc.imsave("E:/testingFolder/crop{}.png".format(str(i)), imlabeled[slices[i]])
         ################################################################################################################
 
-        logging.info("boxes created: ")
-        for obj in segmentations.segments:
-            logging.info("%s", obj)
-
+        logging.info("boxes created. ")
         return segmentations.change_segment_bounds(1.1)
 
     @staticmethod

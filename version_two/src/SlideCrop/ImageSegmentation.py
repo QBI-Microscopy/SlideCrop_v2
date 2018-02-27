@@ -1,11 +1,7 @@
 import numpy as np
 import logging
 
-X1 = 0
-X2 = 2
-
-Y1 = 1
-Y2 = 3
+X1, Y1, X2, Y2 = range(4)
 
 
 class ImageSegmentation(object):
