@@ -190,6 +190,7 @@ class ImageSegmenter(object):
             binary_threshold = cluster_vector[0]
             return 255 * (channel_image > binary_threshold).round()
 
+    @staticmethod
     def _noise_reduction(binary_image):
         """
         Applies morphological erosion to the binary_image to reduce noise. 
@@ -200,6 +201,7 @@ class ImageSegmenter(object):
         structure = np.ones((struct_size, struct_size))
         return ndimage.binary_erosion(binary_image.astype(np.int), structure=structure)
 
+    @staticmethod
     def _image_dilation(binary_image):
         """
         Applies morphological dilation to the binary_image to increase size of the foreground objects
