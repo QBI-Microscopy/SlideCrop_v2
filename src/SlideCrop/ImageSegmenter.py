@@ -1,9 +1,11 @@
-from .ImageSegmentation import ImageSegmentation
-import numpy as np
-import scipy.ndimage as ndimage
-import scipy.misc as misc
 import logging
-from .Config import Config
+
+import numpy as np
+import scipy.misc as misc
+import scipy.ndimage as ndimage
+
+from resources.Config import Config
+from .ImageSegmentation import ImageSegmentation
 
 K_Clusters = 2
 BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used in the image corners to be considered
@@ -79,10 +81,10 @@ class ImageSegmenter(object):
 
         # Add indices for each corner of the image
         for i in range(BGPCOUNT):
-            background_corner_index_x_list.append(i);
-            background_corner_index_y_list.append(i);
-            background_corner_index_x_list.append(x_dim - (i + 1));
-            background_corner_index_y_list.append(y_dim - (i + 1));
+            background_corner_index_x_list.append(i)
+            background_corner_index_y_list.append(i)
+            background_corner_index_x_list.append(x_dim - (i + 1))
+            background_corner_index_y_list.append(y_dim - (i + 1))
 
         if image.ndim == 3:
             background_vector = image[background_corner_index_x_list, background_corner_index_y_list, :]

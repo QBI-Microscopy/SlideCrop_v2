@@ -1,6 +1,7 @@
-from version_two.src.SlideCrop import ImarisImage as I
-import numpy as np
 import scipy.misc
+
+from src.SlideCrop import ImarisImage as I
+
 DIRECTORY = "E:/questionable_testdata"
 import os
 resolution = 4

@@ -1,12 +1,14 @@
+import logging
 import os
+from multiprocessing import Process
+from os.path import basename, splitext, join
+
 from PIL import Image
 from PIL.TiffImagePlugin import AppendingTiffWriter as TIFF
-import logging
-from os.path import basename,split, splitext, join
-from multiprocessing import Process
-import version_two.src.SlideCrop.ImarisImage as I
 
-DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
+import src.SlideCrop.ImarisImage as I
+
+#DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
 
 class TIFFImageCropper(object):
     """
@@ -28,7 +30,8 @@ class TIFFImageCropper(object):
         else:
             filename = basename(input_path) #(input_path.split("/")[-1]).split(".")[0]
             new_folder = splitext(filename)[0]
-            image_folder = "{}/{}".format(output_path, new_folder)
+            image_folder = join(output_path, new_folder)
+            print("Output Dir: ", image_folder)
             if not os.path.isdir(image_folder):
                 os.makedirs(image_folder)
 
@@ -68,7 +71,11 @@ class TIFFImageCropper(object):
                                                                         x=[segment[0], segment[2]])
 
             # Only Save as AppendedTiff
-            with TIFF(join(output_path, input_image.get_name()+ "_"+str(box_index)+"_full.tiff"), False) as tf:
+            # TODO Provide option to save back to inputdir? if so,
+            # outputfile = input_image.get_name() + "_" + str(box_index) + "_full.tiff"
+            outputfile = join(output_path, basename(input_image.get_name()) + "_" + str(box_index) + "_full.tiff")
+            print("Generating file: ", outputfile)
+            with TIFF(outputfile, False) as tf:
                 try:
                     im = Image.fromarray(image_data[:, :, 0, :, 0], mode="RGB")
                     im.save(tf)

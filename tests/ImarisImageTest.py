@@ -1,7 +1,9 @@
 import unittest
-from version_two.src.SlideCrop import ImarisImage
+
 import numpy as np
-import h5py
+
+from src.SlideCrop import ImarisImage
+
 TESTFILE_PATH = "E:/testfile.ims"
 class ImarisImageTest(unittest.TestCase):
     """

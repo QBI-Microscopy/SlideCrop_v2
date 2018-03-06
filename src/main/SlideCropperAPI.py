@@ -1,13 +1,16 @@
-from multiprocessing import Process
+import argparse
 import logging
-import version_two.src.SlideCrop.ImarisImage as I
-from version_two.src.SlideCrop.ImageSegmenter import ImageSegmenter
-from version_two.src.SlideCrop.TIFFImageCropper import TIFFImageCropper
-from version_two.src.SlideCrop.InputImage import InputImage
 import os
+import sys
+from multiprocessing import Process
 from os.path import join
 
-DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
+import src.SlideCrop.ImarisImage as I
+from src.SlideCrop.ImageSegmenter import ImageSegmenter
+from src.SlideCrop.InputImage import InputImage
+from src.SlideCrop.TIFFImageCropper import TIFFImageCropper
+
+#DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
 FORMAT = '|%(thread)d |%(filename)s |%(funcName)s |%(lineno)d ||%(message)s||'
 
 class SlideCropperAPI(object):
@@ -79,32 +82,46 @@ class SlideCropperAPI(object):
 """
     Testing Methods for API. Use above methods directly 
 """
-def main():
+def main(args):
     """
     Standard wrapper for API usage. Sets API up to call innerMain function. 
     """
-    logging.basicConfig(filename="SlideCropperLog.txt", level= logging.DEBUG, format= FORMAT)
+    logfile = args.logfile
+    logging.basicConfig(filename=logfile, level= logging.DEBUG, format= FORMAT)
     logging.captureWarnings(True)
 
     parent_pid = os.getpid()
     # Only log for first process created. Must check that process is the original.
     if os.getpid() == parent_pid:
         logging.info("\nSlideCropper started with pid: {}".format(os.getpid()))
-    innerMain()
+    if args.datafile is not None:
+        SlideCropperAPI.crop_single_image(join(args.inputdir,args.datafile), args.outputdir)
+    else:
+        SlideCropperAPI.crop_all_in_folder(args.inputdir, args.outputdir)
     if os.getpid() == parent_pid:
         logging.info("SlideCropper ended with pid: {}\n".format(os.getpid()))
 
-def innerMain():
+def create_parser():
     """
-    API actions in use. 
+    Create commandline parser
+    :return:
     """
 
-    # SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/threshold""E:/testdata1/AT8 tg128f 20~B.ims")
-    outputdir = "Z:\\Micro Admin\\Jack\\output"
-    inputdir = "Z:\\Micro Admin\\Jack\\Adam"
-    testfile = "AT8 control~B.ims"
-    SlideCropperAPI.crop_single_image(join(inputdir,testfile), outputdir)
-    # SlideCropperAPI.crop_all_in_folder("E:/testdata2", "E:/threshold")
+    parser = argparse.ArgumentParser(prog=sys.argv[0],
+                                     description='''\
+                Crops serial section images in large image files into separate images
+                
+                 ''')
+    parser.add_argument('--datafile', action='store', help='Data file', default="AT8 control~B.ims")
+    parser.add_argument('--outputdir', action='store', help='Output directory', default="Z:\\Micro Admin\\Jack\\output")
+    parser.add_argument('--inputdir', action='store', help='Input directory', default="Z:\\Micro Admin\\Jack\\Adam")
+    parser.add_argument('--logfile', action='store', help='Input directory', default="..\\..\\logs\\SlideCropperLog.txt")
 
-if __name__ == '__main__':
-    main()
+    return parser
+
+####################################################################################################################
+if __name__ == "__main__":
+
+    parser = create_parser()
+    args = parser.parse_args()
+    main(args)

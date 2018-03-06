@@ -1,9 +1,11 @@
-from version_two.src.SlideCrop.ImageSegmenter import ImageSegmenter as seg
-from skimage import io
-import scipy.misc as misc
 import os
+
 import numpy as np
+import scipy.misc as misc
 import scipy.ndimage as ndimage
+from skimage import io
+
+from src.SlideCrop.ImageSegmenter import ImageSegmenter as seg
 
 WORK_DIR = "E:/"
 im = io.imread(WORK_DIR + "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") # "testdata2_resolution3/170818_APP_1878 UII_BF~B.jpg") #'testfile4.jpg') #"testdata1_resolution3/AT8 wt2223m 11~B.jpg") #  'testfile4.jpg') # "testdata2_resolution4/170818_APP_1878 UII_BF~B.jpg") # "'td11.png') # 'testfile4.jpg')
