@@ -5,9 +5,9 @@ from version_two.src.SlideCrop.ImageSegmenter import ImageSegmenter
 from version_two.src.SlideCrop.TIFFImageCropper import TIFFImageCropper
 from version_two.src.SlideCrop.InputImage import InputImage
 import os
+from os.path import join
 
-
-DEFAULT_LOGGING_FILEPATH = "E:/SlideCropperLog.txt"
+DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
 FORMAT = '|%(thread)d |%(filename)s |%(funcName)s |%(lineno)d ||%(message)s||'
 
 class SlideCropperAPI(object):
@@ -83,7 +83,7 @@ def main():
     """
     Standard wrapper for API usage. Sets API up to call innerMain function. 
     """
-    logging.basicConfig(filename="E:/SlideCropperLog.txt", level= logging.DEBUG, format= FORMAT)
+    logging.basicConfig(filename="SlideCropperLog.txt", level= logging.DEBUG, format= FORMAT)
     logging.captureWarnings(True)
 
     parent_pid = os.getpid()
@@ -99,8 +99,11 @@ def innerMain():
     API actions in use. 
     """
 
-    # SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/threshold")
-    SlideCropperAPI.crop_single_image("E:/testdata1/AT8 tg128f 20~B.ims", "E:/threshold")
+    # SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/threshold""E:/testdata1/AT8 tg128f 20~B.ims")
+    outputdir = "Z:\\Micro Admin\\Jack\\output"
+    inputdir = "Z:\\Micro Admin\\Jack\\Adam"
+    testfile = "AT8 control~B.ims"
+    SlideCropperAPI.crop_single_image(join(inputdir,testfile), outputdir)
     # SlideCropperAPI.crop_all_in_folder("E:/testdata2", "E:/threshold")
 
 if __name__ == '__main__':
