@@ -2,11 +2,11 @@ import os
 from PIL import Image
 from PIL.TiffImagePlugin import AppendingTiffWriter as TIFF
 import logging
-
+from os.path import basename,split, splitext, join
 from multiprocessing import Process
 import version_two.src.SlideCrop.ImarisImage as I
 
-DEFAULT_LOGGING_FILEPATH = "E:/SlideCropperLog.txt"
+DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
 
 class TIFFImageCropper(object):
     """
@@ -26,7 +26,8 @@ class TIFFImageCropper(object):
         if not os.path.isdir(output_path):
             return None
         else:
-            new_folder = (input_path.split("/")[-1]).split(".")[0]
+            filename = basename(input_path) #(input_path.split("/")[-1]).split(".")[0]
+            new_folder = splitext(filename)[0]
             image_folder = "{}/{}".format(output_path, new_folder)
             if not os.path.isdir(image_folder):
                 os.makedirs(image_folder)
@@ -67,7 +68,7 @@ class TIFFImageCropper(object):
                                                                         x=[segment[0], segment[2]])
 
             # Only Save as AppendedTiff
-            with TIFF("{}/{}_{}_full.tiff".format(output_path, input_image.get_name(), box_index), False) as tf:
+            with TIFF(join(output_path, input_image.get_name()+ "_"+str(box_index)+"_full.tiff"), False) as tf:
                 try:
                     im = Image.fromarray(image_data[:, :, 0, :, 0], mode="RGB")
                     im.save(tf)
