@@ -1,11 +1,7 @@
 import numpy as np
 import logging
 
-X1 = 0
-X2 = 2
-
-Y1 = 1
-Y2 = 3
+X1, Y1, X2, Y2 = range(4)
 
 
 class ImageSegmentation(object):
@@ -94,6 +90,7 @@ class ImageSegmentation(object):
         :param factor: a float value dictating the change in bounding box size. Factor > 1 increases the ROI
         :return: an ImageSegmentation object with bounding boxes increased/decreased by the given factor
         """
+        logging.info("Segments are being increase by a factor of {}.".format(factor))
         new_image_segmentation = ImageSegmentation(self.width, self.height)
         for bounding_box in self.segments:
             centre_point = [(bounding_box[X1] + bounding_box[X2]) / 2, (bounding_box[Y1] + bounding_box[Y2]) / 2]

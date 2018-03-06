@@ -3,5 +3,8 @@ build/
 libtiff.dll
 *.pyc
 .DS_Store
-*.xml
 .idea/
+*.jpg
+*.xml
+*.fbp
+
