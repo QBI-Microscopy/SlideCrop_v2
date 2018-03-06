@@ -99,7 +99,8 @@ def innerMain():
     API actions in use. 
     """
 
-    SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/threshold")
+    # SlideCropperAPI.crop_all_in_folder("E:/testdata1", "E:/threshold")
+    SlideCropperAPI.crop_single_image("E:/testdata1/AT8 tg128f 20~B.ims", "E:/threshold")
     # SlideCropperAPI.crop_all_in_folder("E:/testdata2", "E:/threshold")
 
 if __name__ == '__main__':

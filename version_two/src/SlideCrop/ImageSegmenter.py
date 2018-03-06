@@ -14,9 +14,6 @@ MAX_NOISE_AREA = 1000   # Max area (pixels) of a slice for it to be still consid
 DELTAX, DELTAY = (0, 0)  # (20, 50) # How close in both directions a slice can be to another to be considered the same image
 IMAGEX, IMAGEY = (3000, 1200) # Size of image to use when segmenting the image.
 
-# TODO: change x and y (they're actually the wrong way around) (can do from slice objects)
-# TODO: consider resizing from constants (3000 x 1200)
-
 class ImageSegmenter(object):
     """
     Static Methods to segment an 2D image with multiple channels. 
@@ -263,7 +260,7 @@ class ImageSegmenter(object):
     def _add_box_from_slice(box, segmentation_object):
         """
         returns an array of two points [x1, y1, x2, y2] where point 1 is the left top corner and point 2 the right
-         bottom corner of a box surrounding an object. 
+        bottom corner of a box surrounding an object. 
         :param box: a 2 value tuple of slice objects
         """
         y_slice = box[0]
@@ -285,12 +282,11 @@ class ImageSegmenter(object):
     def intersect(s1, s2):
         """
         :param s1, s2: 2D tuples of slice objects i.e. (Slice, Slice) for a region of an image. 
-        :return: 1 if the intersection of the two regions is not empty (i.e. have common pixels) for a given buffer 
-            DELTAX or DELTAX
+        :return: 1 if the intersection of the two regions is not empty (i.e. have common pixels) 
         """
-        if (s1[0].stop + DELTAX < s2[0].start) | (s1[0].start > s2[0].stop + DELTAX):
+        if (s1[0].stop < s2[0].start) | (s1[0].start > s2[0].stop):
             return False
-        return not (s1[1].stop + DELTAY < s2[1].start) | (s1[1].start > s2[1].stop + DELTAY)
+        return not (s1[1].stop < s2[1].start) | (s1[1].start > s2[1].stop)
 
     @staticmethod
     def add(s1, s2):

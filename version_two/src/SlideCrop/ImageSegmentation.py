@@ -27,7 +27,8 @@ class ImageSegmentation(object):
             logging.error("Invalid image segment: %s of image sized %s", (x1, y1, x2, y2), (self.width, self.height))
             raise InvalidSegmentError()
         else:
-            self.segments.append([x1, y1, x2, y2])
+            if [x1, y1, x2, y2] not in self.segments:
+                self.segments.append([x1, y1, x2, y2])
 
     def get_scaled_segments(self, width, height):
         """
