@@ -11,11 +11,8 @@ BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used 
 SENSITIVITY_THRESHOLD = .05 # Sensitivity for K means iterating. smaller threshold means a more accurate threshold.
 MAX_NOISE_AREA = 1000   # Max area (pixels) of a slice for it to be still considered noise
 
-DELTAX, DELTAY = (20, 50) # How close in both directions a slice can be to another to be considered the same image
+DELTAX, DELTAY = (0, 0)  # (20, 50) # How close in both directions a slice can be to another to be considered the same image
 IMAGEX, IMAGEY = (3000, 1200) # Size of image to use when segmenting the image.
-
-# TODO: change x and y (they're actually the wrong way around) (can do from slice objects)
-# TODO: consider resizing from constants (3000 x 1200)
 
 class ImageSegmenter(object):
     """
@@ -44,7 +41,9 @@ class ImageSegmenter(object):
         opened_image = ImageSegmenter._image_dilation(closed_image)
 
         # Step 3 & 4
-        return ImageSegmenter._apply_object_detection(opened_image)
+        segments = ImageSegmenter._apply_object_detection(opened_image).change_segment_bounds(Config.border_factor)
+        logging.info("Segments created from image. Segments are: {}".format(segments))
+        return segments
 
     @staticmethod
     def _threshold_image(image_array, k):
@@ -101,6 +100,7 @@ class ImageSegmenter(object):
         """
         if image.ndim == 3:
             return np.mean(image, axis=0)
+        logging.info("Image for segmenting does not contain multiple channels.")
         return image
 
     @staticmethod
@@ -180,11 +180,13 @@ class ImageSegmenter(object):
 
         # Using 2nd index of 10 clusters for foreground (index found through testing)
         if (darkObjects):
+            logging.info("Image currently being segmented is deemed to have a light background.")
             binary_threshold = cluster_vector[-1]
             print(cluster_vector, binary_threshold)
             return 255 * (channel_image < binary_threshold).round()
 
         else:
+            logging.info("Image currently being segmented is deemed to have a dark background.")
             binary_threshold = cluster_vector[0]
             return 255 * (channel_image > binary_threshold).round()
 
@@ -252,13 +254,13 @@ class ImageSegmenter(object):
         ################################################################################################################
 
         logging.info("boxes created. ")
-        return segmentations.change_segment_bounds(1.1)
+        return segmentations
 
     @staticmethod
     def _add_box_from_slice(box, segmentation_object):
         """
         returns an array of two points [x1, y1, x2, y2] where point 1 is the left top corner and point 2 the right
-         bottom corner of a box surrounding an object. 
+        bottom corner of a box surrounding an object. 
         :param box: a 2 value tuple of slice objects
         """
         y_slice = box[0]
@@ -280,12 +282,11 @@ class ImageSegmenter(object):
     def intersect(s1, s2):
         """
         :param s1, s2: 2D tuples of slice objects i.e. (Slice, Slice) for a region of an image. 
-        :return: 1 if the intersection of the two regions is not empty (i.e. have common pixels) for a given buffer 
-            DELTAX or DELTAX
+        :return: 1 if the intersection of the two regions is not empty (i.e. have common pixels) 
         """
-        if (s1[0].stop + DELTAX < s2[0].start) | (s1[0].start > s2[0].stop + DELTAX):
+        if (s1[0].stop < s2[0].start) | (s1[0].start > s2[0].stop):
             return False
-        return not (s1[1].stop + DELTAY < s2[1].start) | (s1[1].start > s2[1].stop + DELTAY)
+        return not (s1[1].stop < s2[1].start) | (s1[1].start > s2[1].stop)
 
     @staticmethod
     def add(s1, s2):

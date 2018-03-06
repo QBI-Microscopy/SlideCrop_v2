@@ -27,7 +27,8 @@ class ImageSegmentation(object):
             logging.error("Invalid image segment: %s of image sized %s", (x1, y1, x2, y2), (self.width, self.height))
             raise InvalidSegmentError()
         else:
-            self.segments.append([x1, y1, x2, y2])
+            if [x1, y1, x2, y2] not in self.segments:
+                self.segments.append([x1, y1, x2, y2])
 
     def get_scaled_segments(self, width, height):
         """
@@ -90,6 +91,7 @@ class ImageSegmentation(object):
         :param factor: a float value dictating the change in bounding box size. Factor > 1 increases the ROI
         :return: an ImageSegmentation object with bounding boxes increased/decreased by the given factor
         """
+        logging.info("Segments are being increase by a factor of {}.".format(factor))
         new_image_segmentation = ImageSegmentation(self.width, self.height)
         for bounding_box in self.segments:
             centre_point = [(bounding_box[X1] + bounding_box[X2]) / 2, (bounding_box[Y1] + bounding_box[Y2]) / 2]

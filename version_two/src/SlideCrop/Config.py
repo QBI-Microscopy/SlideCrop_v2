@@ -1,10 +1,8 @@
-import random
 
+"""
+    Possible configuration location for application/user dependent variable values. 
+"""
 class Config(object):
 
     test_folder = "E:/threshold"
-    random_number = "1234"
-
-    @staticmethod
-    def change_random_number(cls):
-        cls.random_number = str(random.randint(0, 10000))
+    border_factor  = 1.3
