@@ -11,7 +11,7 @@ BGPCOUNT = 80  # Background Pixel Count: Pixel length of the squares to be used 
 SENSITIVITY_THRESHOLD = .05 # Sensitivity for K means iterating. smaller threshold means a more accurate threshold.
 MAX_NOISE_AREA = 1000   # Max area (pixels) of a slice for it to be still considered noise
 
-DELTAX, DELTAY = (20, 50) # How close in both directions a slice can be to another to be considered the same image
+DELTAX, DELTAY = (0, 0)  # (20, 50) # How close in both directions a slice can be to another to be considered the same image
 IMAGEX, IMAGEY = (3000, 1200) # Size of image to use when segmenting the image.
 
 # TODO: change x and y (they're actually the wrong way around) (can do from slice objects)
@@ -44,7 +44,9 @@ class ImageSegmenter(object):
         opened_image = ImageSegmenter._image_dilation(closed_image)
 
         # Step 3 & 4
-        return ImageSegmenter._apply_object_detection(opened_image)
+        segments = ImageSegmenter._apply_object_detection(opened_image).change_segment_bounds(Config.border_factor)
+        logging.info("Segments created from image. Segments are: {}".format(segments))
+        return segments
 
     @staticmethod
     def _threshold_image(image_array, k):
@@ -101,6 +103,7 @@ class ImageSegmenter(object):
         """
         if image.ndim == 3:
             return np.mean(image, axis=0)
+        logging.info("Image for segmenting does not contain multiple channels.")
         return image
 
     @staticmethod
@@ -180,11 +183,13 @@ class ImageSegmenter(object):
 
         # Using 2nd index of 10 clusters for foreground (index found through testing)
         if (darkObjects):
+            logging.info("Image currently being segmented is deemed to have a light background.")
             binary_threshold = cluster_vector[-1]
             print(cluster_vector, binary_threshold)
             return 255 * (channel_image < binary_threshold).round()
 
         else:
+            logging.info("Image currently being segmented is deemed to have a dark background.")
             binary_threshold = cluster_vector[0]
             return 255 * (channel_image > binary_threshold).round()
 
@@ -252,7 +257,7 @@ class ImageSegmenter(object):
         ################################################################################################################
 
         logging.info("boxes created. ")
-        return segmentations.change_segment_bounds(1.1)
+        return segmentations
 
     @staticmethod
     def _add_box_from_slice(box, segmentation_object):
