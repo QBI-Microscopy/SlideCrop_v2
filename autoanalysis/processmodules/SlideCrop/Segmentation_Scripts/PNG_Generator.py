@@ -1,6 +1,6 @@
 import scipy.misc
 
-from src.SlideCrop import ImarisImage as I
+from autoanalysis.processmodules.SlideCrop import ImarisImage as I
 
 DIRECTORY = "E:/questionable_testdata"
 import os

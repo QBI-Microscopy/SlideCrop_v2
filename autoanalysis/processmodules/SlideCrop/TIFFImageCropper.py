@@ -6,7 +6,8 @@ from os.path import basename, splitext, join
 from PIL import Image
 from PIL.TiffImagePlugin import AppendingTiffWriter as TIFF
 
-import src.SlideCrop.ImarisImage as I
+import autoanalysis.processmodules.SlideCrop.ImarisImage as I
+
 
 #DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
 

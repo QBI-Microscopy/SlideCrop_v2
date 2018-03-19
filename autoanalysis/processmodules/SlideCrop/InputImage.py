@@ -34,8 +34,10 @@ class InputImage(object):
         """
         :return: The extension of the inputted file. 
         """
-        path_split = file_path.split(".")
-        return path_split[-1]
+        from os.path import splitext
+        path_split = splitext(file_path)
+        #path_split = file_path.split(".")
+        return path_split[1]
 
     def get_two_dim_data(self, r, z=0, c=0, t=0, region=-1):
         """

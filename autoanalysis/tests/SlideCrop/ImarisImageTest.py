@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.SlideCrop import ImarisImage
+from autoanalysis.processmodules.SlideCrop import ImarisImage
 
 TESTFILE_PATH = "E:/testfile.ims"
 class ImarisImageTest(unittest.TestCase):

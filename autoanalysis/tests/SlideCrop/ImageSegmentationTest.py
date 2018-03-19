@@ -1,7 +1,7 @@
 import unittest
 
-from src.SlideCrop.ImageSegmentation import ImageSegmentation as ImageSegmentation
-from src.SlideCrop.ImageSegmentation import InvalidSegmentError as InvalidSegmentError
+from autoanalysis.processmodules.SlideCrop.ImageSegmentation import ImageSegmentation as ImageSegmentation
+from autoanalysis.processmodules.SlideCrop.ImageSegmentation import InvalidSegmentError as InvalidSegmentError
 
 
 class ImageSegmentationTest(unittest.TestCase):

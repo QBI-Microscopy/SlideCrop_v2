@@ -4,7 +4,7 @@ import numpy as np
 import scipy.misc as misc
 import scipy.ndimage as ndimage
 
-from resources.Config import Config
+from old_version.src.main.Config import Config
 from .ImageSegmentation import ImageSegmentation
 
 K_Clusters = 2

@@ -4,19 +4,94 @@ import os
 import sys
 from multiprocessing import Process
 from os.path import join
+from collections import OrderedDict
+from autoanalysis.processmodules.SlideCrop.ImageSegmenter import ImageSegmenter
+from autoanalysis.processmodules.SlideCrop.InputImage import InputImage
+from autoanalysis.processmodules.SlideCrop.TIFFImageCropper import TIFFImageCropper
 
-import src.SlideCrop.ImarisImage as I
-from src.SlideCrop.ImageSegmenter import ImageSegmenter
-from src.SlideCrop.InputImage import InputImage
-from src.SlideCrop.TIFFImageCropper import TIFFImageCropper
+import autoanalysis.processmodules.SlideCrop.ImarisImage as I
 
 #DEFAULT_LOGGING_FILEPATH = "SlideCropperLog.txt"
-FORMAT = '|%(thread)d |%(filename)s |%(funcName)s |%(lineno)d ||%(message)s||'
+#FORMAT = '|%(thread)d |%(filename)s |%(funcName)s |%(lineno)d ||%(message)s||'
 
 class SlideCropperAPI(object):
     """
     Main Class for using SlideCropper functionality. All methods are class method based.     
     """
+    def __init__(self, datafile,outputdir,showplots=False):
+        # Load data
+        try:
+            if os.access(datafile,os.R_OK):
+                ext_check = InputImage.get_extension(datafile)
+                if ext_check != ".ims":
+                    raise TypeError("{} is currently not a supported file type".format(ext_check))
+                self.data = datafile
+            else:
+                self.data = None
+                raise IOError('Unable to access datafile: {0}'.format(datafile))
+            msg = "SlideCropper: Image file loaded from %s" % self.data
+            print(msg)
+            # Output
+            if os.access(outputdir, os.R_OK):
+                self.outputdir = outputdir
+            else:
+                raise IOError('Unable to access output directory: {0}'.format(outputdir))
+            # Set config defaults
+            self.cfg = self.getConfigurables()
+            self.showplots = showplots
+        except IOError as e:
+            print(e.args[0])
+            raise e
+        except Exception as e:
+            print(e.args[0])
+            raise e
+
+    def getConfigurables(self):
+        '''
+        List of configurable parameters in order with defaults
+        :return:
+        '''
+        cfg = OrderedDict()
+        cfg['BORDER_FACTOR']=1.3
+        cfg['IMAGE_TYPE'] = '.ims'
+        cfg['CROPPED_IMAGE_FILE'] = '_cropped.tif'
+        return cfg
+
+    def setConfigurables(self,cfg):
+        '''
+        Merge any variables set externally
+        :param cfg:
+        :return:
+        '''
+        if self.cfg is None:
+            self.cfg = self.getConfigurables()
+        for cf in cfg.keys():
+            self.cfg[cf]= cfg[cf]
+        print("Config loaded")
+
+    def run(self):
+        if self.data is not None:
+            self.crop_single_image(self.data,self.outputdir)
+        else:
+            raise ValueError('Error: Run failed: Image not loaded')
+
+    def _loadImage(self,file_path):
+        '''
+        Image files are very large and often archived. This will bring them back ready for processing.
+        :param file_path: full path filename
+        :return: filename from image obj
+        '''
+        image = None
+        try:
+            image = I.ImarisImage(file_path)
+            print('Image loaded: ', image.get_filename())
+            return image.get_filename()
+        except IOError as e:
+            print('ERROR: Unable to load image: ', file_path)
+        finally:
+            if image is not None:
+                image.close_file()
+
 
     @classmethod
     def crop_single_image(cls, file_path, output_path):
@@ -27,17 +102,14 @@ class SlideCropperAPI(object):
         :return: 
         """
 
-        logging.info("Starting to crop: {0}".format(file_path))
-        ext_check = InputImage.get_extension(file_path)
-        if ext_check != "ims":
-            raise TypeError("{} is currently not a supported file type".format(ext_check))
+        print("Starting to crop: {0}".format(file_path))
 
         image = I.ImarisImage(file_path)
         segmentations = ImageSegmenter.segment_image(image.get_multichannel_segmentation_image())
         image.close_file()
-        logging.info("Finished Segmenting of image: starting crop.")
+        print("Finished Segmenting of image: starting crop.")
         TIFFImageCropper.crop_input_images(file_path, segmentations, output_path)
-        logging.info("Finished Cropping of image.")
+        print("Finished Cropping of image.")
 
 
     @classmethod
@@ -87,19 +159,19 @@ def main(args):
     Standard wrapper for API usage. Sets API up to call innerMain function. 
     """
     logfile = args.logfile
-    logging.basicConfig(filename=logfile, level= logging.DEBUG, format= FORMAT)
+    logging.basicConfig(filename=logfile, level=logging.DEBUG, format=FORMAT)
     logging.captureWarnings(True)
 
     parent_pid = os.getpid()
     # Only log for first process created. Must check that process is the original.
     if os.getpid() == parent_pid:
-        logging.info("\nSlideCropper started with pid: {}".format(os.getpid()))
+        print("\nSlideCropper started with pid: {}".format(os.getpid()))
     if args.datafile is not None:
         SlideCropperAPI.crop_single_image(join(args.inputdir,args.datafile), args.outputdir)
     else:
         SlideCropperAPI.crop_all_in_folder(args.inputdir, args.outputdir)
     if os.getpid() == parent_pid:
-        logging.info("SlideCropper ended with pid: {}\n".format(os.getpid()))
+        print("SlideCropper ended with pid: {}\n".format(os.getpid()))
 
 def create_parser():
     """
@@ -112,10 +184,11 @@ def create_parser():
                 Crops serial section images in large image files into separate images
                 
                  ''')
-    parser.add_argument('--datafile', action='store', help='Data file', default="AT8 control~B.ims")
+    parser.add_argument('--datafile', action='store', help='Data file', default="AT8 sc2005f 32~B.ims")
     parser.add_argument('--outputdir', action='store', help='Output directory', default="Z:\\Micro Admin\\Jack\\output")
     parser.add_argument('--inputdir', action='store', help='Input directory', default="Z:\\Micro Admin\\Jack\\Adam")
     parser.add_argument('--logfile', action='store', help='Input directory', default="..\\..\\logs\\SlideCropperLog.txt")
+    parser.add_argument('--imagetype', action='store', help='Type of images to processed', default='.ims')
 
     return parser
 

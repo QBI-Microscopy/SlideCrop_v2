@@ -17,11 +17,16 @@ class ImarisImage(InputImage):
         :param filename: String path to the given image file. 
         """
         self.filename = filename
-        self.file = h5py.File(self.filename, "r")
-        self.resolutions = self.get_resolution_levels()
-
-        # will be defined as self.segmentation_resolution
-        self.segment_resolution = self._set_segmentation_res()  # resolution level to be used for segmentation
+        try:
+            self.file = h5py.File(self.filename, "r")
+            print('H5 loaded: ', self.file.keys())
+            self.resolutions = self.get_resolution_levels()
+            print('H5 resolution levels: ', self.resolutions)
+            # will be defined as self.segmentation_resolution
+            self.segment_resolution = self._set_segmentation_res()  # resolution level to be used for segmentation
+            print('H5 segment level: ', self.segment_resolution)
+        except Exception as e:
+            raise IOError(e)
 
     def get_filename(self):
         """

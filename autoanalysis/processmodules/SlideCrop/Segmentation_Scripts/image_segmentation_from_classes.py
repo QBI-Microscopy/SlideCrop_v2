@@ -1,7 +1,7 @@
 import version_two.src.SlideCrop.ImarisImage as I
 from version_two.src.SlideCrop.ImageSegmenter import ImageSegmenter as seg
 
-from src.SlideCrop.TIFFImageCropper import TIFFImageCropper
+from autoanalysis.processmodules.SlideCrop.TIFFImageCropper import TIFFImageCropper
 
 
 def main():
